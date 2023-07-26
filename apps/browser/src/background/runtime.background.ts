@@ -8,7 +8,7 @@ import { Utils } from "@bitwarden/common/platform/misc/utils";
 
 import { AutofillService } from "../autofill/services/abstractions/autofill.service";
 import { BrowserApi } from "../platform/browser/browser-api";
-import { BrowserPopoutWindowService } from "../platform/services/abstractions/browser-popout-window.service";
+import { BrowserPopoutWindowService } from "../platform/popup/abstractions/browser-popout-window.service";
 import { BrowserEnvironmentService } from "../platform/services/browser-environment.service";
 import BrowserPlatformUtilsService from "../platform/services/browser-platform-utils.service";
 

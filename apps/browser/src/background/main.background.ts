@@ -114,6 +114,7 @@ import { Account } from "../models/account";
 import { BrowserApi } from "../platform/browser/browser-api";
 import { flagEnabled } from "../platform/flags";
 import { UpdateBadge } from "../platform/listeners/update-badge";
+import BrowserPopoutWindowService from "../platform/popup/browser-popout-window.service";
 import { BrowserStateService as StateServiceAbstraction } from "../platform/services/abstractions/browser-state.service";
 import { BrowserCryptoService } from "../platform/services/browser-crypto.service";
 import { BrowserEnvironmentService } from "../platform/services/browser-environment.service";
@@ -122,7 +123,6 @@ import BrowserLocalStorageService from "../platform/services/browser-local-stora
 import BrowserMessagingPrivateModeBackgroundService from "../platform/services/browser-messaging-private-mode-background.service";
 import BrowserMessagingService from "../platform/services/browser-messaging.service";
 import BrowserPlatformUtilsService from "../platform/services/browser-platform-utils.service";
-import BrowserPopoutWindowService from "../platform/services/browser-popout-window.service";
 import { BrowserStateService } from "../platform/services/browser-state.service";
 import { KeyGenerationService } from "../platform/services/key-generation.service";
 import { LocalBackedSessionStorageService } from "../platform/services/local-backed-session-storage.service";
