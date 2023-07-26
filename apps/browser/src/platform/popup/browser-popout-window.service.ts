@@ -19,19 +19,17 @@ class BrowserPopoutWindowService implements BrowserPopupWindowServiceInterface {
     for (const tabId of this.activePopoutTabIds) {
       await BrowserApi.removeTab(tabId);
     }
-
     this.activePopoutTabIds.clear();
   }
 
   async openLoginPrompt(senderWindowId: number) {
     await this.closeActivePopoutWindows();
-    await this.openPopoutWindow(senderWindowId);
+    await this.openPopoutWindow(senderWindowId, "popup/index.html?uilocation=popout");
   }
 
-  private async openPopoutWindow(senderWindowId: number, popupWindowURL?: string) {
+  private async openPopoutWindow(senderWindowId: number, popupWindowURL: string) {
     const senderWindow = senderWindowId && (await BrowserApi.getWindow(senderWindowId));
-    const url = chrome.extension.getURL(popupWindowURL || "popup/index.html?uilocation=popout");
-
+    const url = chrome.extension.getURL(popupWindowURL);
     const offsetRight = 15;
     const offsetTop = 90;
     const popupWidth = this.defaultPopoutWindowOptions.width;
