@@ -68,7 +68,7 @@ export default class RuntimeBackground {
 
         if (this.lockedVaultPendingNotifications?.length > 0) {
           item = this.lockedVaultPendingNotifications.pop();
-          await this.browserPopoutWindowService.closeActivePopoutWindows();
+          await this.browserPopoutWindowService.closeLoginPrompt();
         }
 
         await this.main.refreshBadge();

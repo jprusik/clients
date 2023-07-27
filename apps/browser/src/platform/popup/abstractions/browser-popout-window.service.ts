@@ -1,6 +1,6 @@
 interface BrowserPopoutWindowService {
-  closeActivePopoutWindows(): Promise<void>;
   openLoginPrompt(senderWindowId: number): Promise<void>;
+  closeLoginPrompt(): Promise<void>;
 }
 
 export { BrowserPopoutWindowService };

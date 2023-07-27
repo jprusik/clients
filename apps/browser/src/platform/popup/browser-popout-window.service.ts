@@ -3,7 +3,7 @@ import { BrowserApi } from "../browser/browser-api";
 import { BrowserPopoutWindowService as BrowserPopupWindowServiceInterface } from "./abstractions/browser-popout-window.service";
 
 class BrowserPopoutWindowService implements BrowserPopupWindowServiceInterface {
-  private activePopoutTabIds: Set<number> = new Set();
+  private singleActionPopoutTabIds: Record<string, number> = {};
   private defaultPopoutWindowOptions: chrome.windows.CreateData = {
     type: "normal",
     focused: true,
@@ -11,23 +11,24 @@ class BrowserPopoutWindowService implements BrowserPopupWindowServiceInterface {
     height: 800,
   };
 
-  async closeActivePopoutWindows() {
-    if (!this.activePopoutTabIds?.size) {
-      return;
-    }
-
-    for (const tabId of this.activePopoutTabIds) {
-      await BrowserApi.removeTab(tabId);
-    }
-    this.activePopoutTabIds.clear();
-  }
-
   async openLoginPrompt(senderWindowId: number) {
-    await this.closeActivePopoutWindows();
-    await this.openPopoutWindow(senderWindowId, "popup/index.html?uilocation=popout");
+    await this.closeLoginPrompt();
+    await this.openPopoutWindow(
+      senderWindowId,
+      "popup/index.html?uilocation=popout",
+      "loginPrompt"
+    );
   }
 
-  private async openPopoutWindow(senderWindowId: number, popupWindowURL: string) {
+  async closeLoginPrompt() {
+    await this.closeSingleActionPopout("loginPrompt");
+  }
+
+  private async openPopoutWindow(
+    senderWindowId: number,
+    popupWindowURL: string,
+    singleActionPopoutKey: string
+  ) {
     const senderWindow = senderWindowId && (await BrowserApi.getWindow(senderWindowId));
     const url = chrome.extension.getURL(popupWindowURL);
     const offsetRight = 15;
@@ -43,7 +44,20 @@ class BrowserPopoutWindowService implements BrowserPopupWindowServiceInterface {
       : { ...this.defaultPopoutWindowOptions, url };
 
     const popupWindow = await BrowserApi.createWindow(windowOptions);
-    this.activePopoutTabIds.add(popupWindow?.tabs[0].id);
+
+    if (!singleActionPopoutKey) {
+      return;
+    }
+    this.singleActionPopoutTabIds[singleActionPopoutKey] = popupWindow?.tabs[0].id;
+  }
+
+  private async closeSingleActionPopout(popoutKey: string) {
+    const tabId = this.singleActionPopoutTabIds[popoutKey];
+    if (!tabId) {
+      return;
+    }
+    await BrowserApi.removeTab(tabId);
+    this.singleActionPopoutTabIds[popoutKey] = null;
   }
 }
 
