@@ -8,6 +8,7 @@ import { CryptoService } from "../../platform/abstractions/crypto.service";
 import { EncryptService } from "../../platform/abstractions/encrypt.service";
 import { I18nService } from "../../platform/abstractions/i18n.service";
 import { StateService } from "../../platform/abstractions/state.service";
+import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { sequentialize } from "../../platform/misc/sequentialize";
 import { Utils } from "../../platform/misc/utils";
 import Domain from "../../platform/models/domain/domain-base";
@@ -60,7 +61,8 @@ export class CipherService implements CipherServiceAbstraction {
     private searchService: SearchService,
     private stateService: StateService,
     private encryptService: EncryptService,
-    private cipherFileUploadService: CipherFileUploadService
+    private cipherFileUploadService: CipherFileUploadService,
+    private userVerificationService: UserVerificationService
   ) {}
 
   async getDecryptedCipherCache(): Promise<CipherView[]> {
@@ -337,11 +339,18 @@ export class CipherService implements CipherServiceAbstraction {
     const ciphers = await this.getAll();
     const orgKeys = await this.cryptoService.getOrgKeys();
     const userKey = await this.cryptoService.getUserKeyWithLegacySupport();
+    const userHasMasterPassword = await this.userVerificationService.hasMasterPassword();
 
     // Group ciphers by orgId or under 'null' for the user's ciphers
     const grouped = ciphers.reduce((agg, c) => {
       agg[c.organizationId] ??= [];
       agg[c.organizationId].push(c);
+
+      // If using passwordless, ephemerally reset cipher reprompt to 'NONE' to disable reprompt frontend experiences
+      if (!userHasMasterPassword && c.reprompt === 1) {
+        c.reprompt = 0;
+      }
+
       return agg;
     }, {} as Record<string, Cipher[]>);
 

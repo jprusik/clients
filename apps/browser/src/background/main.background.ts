@@ -338,7 +338,8 @@ export default class MainBackground {
       this.searchService,
       this.stateService,
       this.encryptService,
-      this.cipherFileUploadService
+      this.cipherFileUploadService,
+      this.userVerificationService
     );
     this.folderService = new BrowserFolderService(
       this.cryptoService,

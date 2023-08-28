@@ -38,6 +38,10 @@ import {
   stateServiceFactory,
   StateServiceInitOptions,
 } from "../../../platform/background/service-factories/state-service.factory";
+import {
+  UserVerificationServiceInitOptions,
+  userVerificationServiceFactory,
+} from "../../../auth/background/service-factories/user-verification-service.factory";
 
 type CipherServiceFactoryOptions = FactoryOptions;
 
@@ -49,7 +53,8 @@ export type CipherServiceInitOptions = CipherServiceFactoryOptions &
   I18nServiceInitOptions &
   SearchServiceInitOptions &
   StateServiceInitOptions &
-  EncryptServiceInitOptions;
+  EncryptServiceInitOptions &
+  UserVerificationServiceInitOptions;
 
 export function cipherServiceFactory(
   cache: { cipherService?: AbstractCipherService } & CachedServices,
@@ -68,7 +73,8 @@ export function cipherServiceFactory(
         await searchServiceFactory(cache, opts),
         await stateServiceFactory(cache, opts),
         await encryptServiceFactory(cache, opts),
-        await cipherFileUploadServiceFactory(cache, opts)
+        await cipherFileUploadServiceFactory(cache, opts),
+        await userVerificationServiceFactory(cache, opts)
       )
   );
 }
