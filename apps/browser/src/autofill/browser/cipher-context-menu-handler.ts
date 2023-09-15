@@ -18,10 +18,9 @@ import {
   cipherServiceFactory,
   CipherServiceInitOptions,
 } from "../../vault/background/service_factories/cipher-service.factory";
+import { AutofillCipherTypeId } from "../types";
 
 import { MainContextMenuHandler } from "./main-context-menu-handler";
-
-type AutofillCipherTypeId = CipherType.Login | CipherType.Card | CipherType.Identity;
 
 const NOT_IMPLEMENTED = (..._args: unknown[]) => Promise.resolve();
 
