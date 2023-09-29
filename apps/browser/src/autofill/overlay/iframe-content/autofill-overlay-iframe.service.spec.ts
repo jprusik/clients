@@ -3,6 +3,24 @@ import { AutofillOverlayIframeService as AutofillOverlayIframeServiceInterface }
 
 import AutofillOverlayIframeService from "./autofill-overlay-iframe.service";
 
+(global as any).chrome = {
+        runtime: {
+          getURL: function (path: string) {
+            return "chrome-extension://id/overlay/list.html";
+          },
+          connect: (port: any) => {
+            return {
+              onDisconnect: {
+                addListener: (eventsMessage: string, messageHandler: () => void) => {},
+              },
+              onMessage: {
+                addListener: (eventsMessage: string, messageHandler: () => void) => {},
+              },
+            };
+          },
+        },
+      };
+
 describe("AutofillOverlayIframeService", () => {
   const iframePath = "overlay/list.html";
   let autofillOverlayIframeService: AutofillOverlayIframeServiceInterface | any;
@@ -18,9 +36,8 @@ describe("AutofillOverlayIframeService", () => {
 
   describe("initOverlayIframe", () => {
     it("sets up the iframe's attributes", () => {
-      const overlayIframe = autofillOverlayIframeService["iframe"];
-
       autofillOverlayIframeService.initOverlayIframe({ height: "0px" }, "title");
+      const overlayIframe = autofillOverlayIframeService["iframe"];
 
       expect(overlayIframe.src).toEqual("chrome-extension://id/overlay/list.html");
       expect(overlayIframe.tabIndex).toEqual(-1);
@@ -31,10 +48,10 @@ describe("AutofillOverlayIframeService", () => {
     });
 
     it("appends the iframe to the shadowDom", () => {
-      const overlayIframe = autofillOverlayIframeService["iframe"];
       jest.spyOn(autofillOverlayIframeService["shadow"], "appendChild");
 
       autofillOverlayIframeService.initOverlayIframe({ height: "0px" }, "title");
+      const overlayIframe = autofillOverlayIframeService["iframe"];
 
       expect(autofillOverlayIframeService["shadow"].appendChild).toBeCalledWith(overlayIframe);
     });
@@ -47,5 +64,52 @@ describe("AutofillOverlayIframeService", () => {
 
       expect(autofillOverlayIframeService.createAriaAlertElement).toBeCalledWith(ariaAlert);
     });
+
+    describe("handlePortMessage", () => {
+      it("", () => {
+        autofillOverlayIframeService.initOverlayIframe({ top: "0px" }, "title");
+        const overlayIframe = autofillOverlayIframeService["iframe"];
+        const updatedStyles = { position: "relative", top: "40px" };
+        const portMessage = { command: "updateIframePosition", styles: updatedStyles };
+        const port = { name: autofillOverlayIframeService["portName"] };
+
+        jest.spyOn(autofillOverlayIframeService, "setupPortMessageListener");
+        jest.spyOn(autofillOverlayIframeService, "handlePortMessage");
+        jest.spyOn(autofillOverlayIframeService, "updateIframePosition");
+        jest.spyOn(
+          autofillOverlayIframeService["backgroundPortMessageHandlers"],
+          "updateIframePosition"
+        );
+
+        expect(overlayIframe.getAttribute("style")).toContain("top: 0px;");
+
+        autofillOverlayIframeService["setupPortMessageListener"]();
+        expect(autofillOverlayIframeService["setupPortMessageListener"]).toBeCalled();
+
+        autofillOverlayIframeService["handlePortMessage"](portMessage, port);
+
+        expect(autofillOverlayIframeService["handlePortMessage"]).toBeCalledWith(portMessage, port);
+        expect(autofillOverlayIframeService["updateIframePosition"]).toBeCalledWith(updatedStyles);
+        // expect(overlayIframe.getAttribute("style")).toContain("top: 40px;");
+      });
+    });
+
+    /*
+    it("updateElementStyles -> it updates the iframe's styling", () => {
+      const overlayIframe = autofillOverlayIframeService["iframe"];
+      autofillOverlayIframeService.initOverlayIframe({ top: "0px" }, "title");
+
+      expect(overlayIframe.getAttribute("style")).toContain("top: 0px;");
+
+      autofillOverlayIframeService["updateElementStyles"](
+        overlayIframe,
+        { position: "relative", top: "40px" },
+      );
+
+      expect(overlayIframe.getAttribute("style")).toContain("top: 40px;");
+    });
+    */
   });
+
+  describe("handlePortMessage", () => {});
 });
