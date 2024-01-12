@@ -1,0 +1,25 @@
+---
+name: Run Browser Interaction Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      CLIENTS_BRANCH:
+        required: true
+        default: 'main'
+        description: "clients branch or commit hash of extensions build to use"
+        type: string
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger test-all workflow in browser-interactions-testing
+        run: |
+          curl -L \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/bitwarden/browser-interactions-testing/dispatches \
+            -d '{"event_type": "trigger-workflow", "client_payload": {"branch": "${{ inputs.CLIENTS_BRANCH }}", }}'
