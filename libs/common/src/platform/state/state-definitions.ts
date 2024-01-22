@@ -43,3 +43,5 @@ export const SYNC_STATE = new StateDefinition("sync", "disk", { web: "memory" })
 export const VAULT_SETTINGS_DISK = new StateDefinition("vaultSettings", "disk", {
   web: "disk-local",
 });
+
+export const AUTOFILL_SETTINGS_DISK = new StateDefinition("autoFillSettings", "disk");
