@@ -45,11 +45,11 @@ export class OptionsComponent implements OnInit {
   constructor(
     private messagingService: MessagingService,
     private stateService: StateService,
+    private autofillSettingsService: AutofillSettingsServiceAbstraction,
     i18nService: I18nService,
     private themingService: AbstractThemingService,
     private settingsService: SettingsService,
     private vaultSettingsService: VaultSettingsService,
-    private autofillSettingsService: AutofillSettingsServiceAbstraction,
   ) {
     this.themeOptions = [
       { name: i18nService.t("default"), value: ThemeType.System },
@@ -102,7 +102,7 @@ export class OptionsComponent implements OnInit {
     this.showCardsCurrentTab = !(await this.stateService.getDontShowCardsCurrentTab());
     this.showIdentitiesCurrentTab = !(await this.stateService.getDontShowIdentitiesCurrentTab());
 
-    this.enableAutoTotpCopy = !(await this.stateService.getDisableAutoTotpCopy());
+    this.enableAutoTotpCopy = await firstValueFrom(this.autofillSettingsService.autoCopyTotp$);
 
     this.enableFavicon = !this.settingsService.getDisableFavicon();
 
@@ -138,7 +138,7 @@ export class OptionsComponent implements OnInit {
   }
 
   async updateAutoTotpCopy() {
-    await this.stateService.setDisableAutoTotpCopy(!this.enableAutoTotpCopy);
+    await this.autofillSettingsService.setAutofillOnPageLoadDefault(this.enableAutoTotpCopy);
   }
 
   async updateAutoFillOnPageLoad() {
