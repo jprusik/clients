@@ -103,7 +103,9 @@ export default class AutofillService implements AutofillServiceInterface {
 
     const injectedScripts = [mainAutofillScript];
 
-    if (triggeringOnPageLoad) {
+    const autoFillOnPageLoadIsEnabled = await this.getAutofillOnPageLoad();
+
+    if (triggeringOnPageLoad && autoFillOnPageLoadIsEnabled) {
       injectedScripts.push("autofiller.js");
     } else {
       await BrowserApi.executeScriptInTab(tab.id, {
@@ -194,6 +196,10 @@ export default class AutofillService implements AutofillServiceInterface {
 
   async getShouldAutoCopyTotp(): Promise<boolean> {
     return await firstValueFrom(this.autofillSettingsService.autoCopyTotp$);
+  }
+
+  async getAutofillOnPageLoad(): Promise<boolean> {
+    return await firstValueFrom(this.autofillSettingsService.autofillOnPageLoad$);
   }
 
   /**

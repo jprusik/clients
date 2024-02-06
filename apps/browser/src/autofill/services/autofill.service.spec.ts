@@ -89,6 +89,7 @@ describe("AutofillService", () => {
       jest
         .spyOn(autofillService, "getOverlayVisibility")
         .mockResolvedValue(AutofillOverlayVisibility.OnFieldFocus);
+      jest.spyOn(autofillService, "getAutofillOnPageLoad").mockResolvedValue(true);
     });
 
     it("queries all browser tabs and injects the autofill scripts into them", async () => {
@@ -140,6 +141,7 @@ describe("AutofillService", () => {
     it("re-injects the autofill scripts in all tabs", () => {
       autofillService["autofillScriptPortsSet"] = new Set([mock<chrome.runtime.Port>()]);
       jest.spyOn(autofillService as any, "injectAutofillScriptsInAllTabs");
+      jest.spyOn(autofillService, "getAutofillOnPageLoad").mockResolvedValue(true);
 
       // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -167,6 +169,8 @@ describe("AutofillService", () => {
     });
 
     it("accepts an extension message sender and injects the autofill scripts into the tab of the sender", async () => {
+      jest.spyOn(autofillService, "getAutofillOnPageLoad").mockResolvedValue(true);
+
       await autofillService.injectAutofillScripts(sender.tab, sender.frameId, true);
 
       [autofillOverlayBootstrapScript, ...defaultAutofillScripts].forEach((scriptName) => {
@@ -178,10 +182,24 @@ describe("AutofillService", () => {
       });
     });
 
+    it("skips injecting autofiller script when autofill on load setting is disabled", async () => {
+      jest.spyOn(autofillService, "getAutofillOnPageLoad").mockResolvedValue(false);
+
+      await autofillService.injectAutofillScripts(sender.tab, sender.frameId, true);
+
+      expect(BrowserApi.executeScriptInTab).not.toHaveBeenCalledWith(tabMock.id, {
+        file: "content/autofiller.js",
+        frameId: sender.frameId,
+        ...defaultExecuteScriptOptions,
+      });
+    });
+
     it("will inject the bootstrap-autofill-overlay script if the user has the autofill overlay enabled", async () => {
       jest
         .spyOn(autofillService, "getOverlayVisibility")
         .mockResolvedValue(AutofillOverlayVisibility.OnFieldFocus);
+      jest.spyOn(autofillService, "getAutofillOnPageLoad").mockResolvedValue(true);
+
       await autofillService.injectAutofillScripts(sender.tab, sender.frameId);
 
       expect(BrowserApi.executeScriptInTab).toHaveBeenCalledWith(tabMock.id, {
@@ -200,6 +218,8 @@ describe("AutofillService", () => {
       jest
         .spyOn(autofillService, "getOverlayVisibility")
         .mockResolvedValue(AutofillOverlayVisibility.Off);
+      jest.spyOn(autofillService, "getAutofillOnPageLoad").mockResolvedValue(true);
+
       await autofillService.injectAutofillScripts(sender.tab, sender.frameId);
 
       expect(BrowserApi.executeScriptInTab).toHaveBeenCalledWith(tabMock.id, {
@@ -215,6 +235,8 @@ describe("AutofillService", () => {
     });
 
     it("injects the content-message-handler script if not injecting on page load", async () => {
+      jest.spyOn(autofillService, "getAutofillOnPageLoad").mockResolvedValue(true);
+
       await autofillService.injectAutofillScripts(sender.tab, sender.frameId, false);
 
       expect(BrowserApi.executeScriptInTab).toHaveBeenCalledWith(tabMock.id, {
