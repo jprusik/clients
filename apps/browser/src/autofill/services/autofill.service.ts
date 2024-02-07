@@ -194,10 +194,23 @@ export default class AutofillService implements AutofillServiceInterface {
     return formData;
   }
 
+  /**
+   * Gets the overlay's visibility setting from the autofill settings service.
+   */
+  async getOverlayVisibility(): Promise<InlineMenuVisibilitySetting> {
+    return await firstValueFrom(this.autofillSettingsService.inlineMenuVisibility$);
+  }
+
+  /**
+   * Gets the setting for automatically copying TOTP upon autofill from the autofill settings service.
+   */
   async getShouldAutoCopyTotp(): Promise<boolean> {
     return await firstValueFrom(this.autofillSettingsService.autoCopyTotp$);
   }
 
+  /**
+   * Gets the autofill on page load setting from the autofill settings service.
+   */
   async getAutofillOnPageLoad(): Promise<boolean> {
     return await firstValueFrom(this.autofillSettingsService.autofillOnPageLoad$);
   }
@@ -1900,13 +1913,6 @@ export default class AutofillService implements AutofillServiceInterface {
    */
   static hasValue(str: string): boolean {
     return Boolean(str && str !== "");
-  }
-
-  /**
-   * Gets the overlay's visibility setting from the settings service.
-   */
-  async getOverlayVisibility(): Promise<InlineMenuVisibilitySetting> {
-    return await firstValueFrom(this.autofillSettingsService.inlineMenuVisibility$);
   }
 
   /**
