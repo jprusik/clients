@@ -12,7 +12,6 @@ import { Policy } from "../../../admin-console/models/domain/policy";
 import { ResetPasswordPolicyOptions } from "../../../admin-console/models/domain/reset-password-policy-options";
 import { PolicyResponse } from "../../../admin-console/models/response/policy.response";
 import { PolicyService } from "../../../admin-console/services/policy/policy.service";
-import { AutofillSettingsService } from "../../../autofill/services/autofill-settings.service";
 import { ListResponse } from "../../../models/response/list.response";
 import { CryptoService } from "../../../platform/abstractions/crypto.service";
 import { EncryptService } from "../../../platform/abstractions/encrypt.service";
@@ -24,7 +23,6 @@ describe("PolicyService", () => {
 
   let cryptoService: MockProxy<CryptoService>;
   let stateService: MockProxy<StateService>;
-  let autofillSettingsService: MockProxy<AutofillSettingsService>;
   let organizationService: MockProxy<OrganizationService>;
   let encryptService: MockProxy<EncryptService>;
   let activeAccount: BehaviorSubject<string>;
@@ -66,7 +64,7 @@ describe("PolicyService", () => {
     stateService.getUserId.mockResolvedValue("user");
     (window as any).bitwardenContainerService = new ContainerService(cryptoService, encryptService);
 
-    policyService = new PolicyService(stateService, organizationService, autofillSettingsService);
+    policyService = new PolicyService(stateService, organizationService);
   });
 
   afterEach(() => {
