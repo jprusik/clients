@@ -27,7 +27,7 @@ export class AutofillSettingsKeyMigrator extends Migrator<17, 18> {
     // global state (e.g. "autoFillOverlayVisibility -> inlineMenuVisibility")
     const globalState = await helper.get<ExpectedGlobalState>("global");
 
-    if (globalState.autoFillOverlayVisibility) {
+    if (globalState?.autoFillOverlayVisibility != null) {
       await helper.setToGlobal(
         {
           stateDefinition: {
@@ -119,7 +119,7 @@ export class AutofillSettingsKeyMigrator extends Migrator<17, 18> {
 
   async rollback(helper: MigrationHelper): Promise<void> {
     // global state (e.g. "inlineMenuVisibility -> autoFillOverlayVisibility")
-    const globalState = await helper.get<ExpectedGlobalState>("global");
+    const globalState = (await helper.get<ExpectedGlobalState>("global")) || {};
     const inlineMenuVisibility: InlineMenuVisibilitySetting = await helper.getFromGlobal({
       stateDefinition: {
         name: "autofillSettingsLocal",
