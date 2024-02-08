@@ -9,8 +9,14 @@ import {
   stateProviderFactory,
   StateProviderInitOptions,
 } from "../../../platform/background/service-factories/state-provider.factory";
+import {
+  policyServiceFactory,
+  PolicyServiceInitOptions,
+} from "../../../admin-console/background/service-factories/policy-service.factory";
 
-export type AutofillSettingsServiceInitOptions = FactoryOptions & StateProviderInitOptions;
+export type AutofillSettingsServiceInitOptions = FactoryOptions &
+  StateProviderInitOptions &
+  PolicyServiceInitOptions;
 
 export function autofillSettingsServiceFactory(
   cache: { autofillSettingsService?: AutofillSettingsService } & CachedServices,
@@ -20,6 +26,10 @@ export function autofillSettingsServiceFactory(
     cache,
     "autofillSettingsService",
     opts,
-    async () => new AutofillSettingsService(await stateProviderFactory(cache, opts)),
+    async () =>
+      new AutofillSettingsService(
+        await stateProviderFactory(cache, opts),
+        await policyServiceFactory(cache, opts),
+      ),
   );
 }

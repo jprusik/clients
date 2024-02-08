@@ -4,7 +4,6 @@ import { Jsonify } from "type-fest";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
 import { PolicyService } from "@bitwarden/common/admin-console/services/policy/policy.service";
-import { AutofillSettingsServiceAbstraction } from "@bitwarden/common/autofill/services/autofill-settings.service";
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 
 import { browserSession, sessionSync } from "../../platform/decorators/session-sync-observable";
@@ -19,12 +18,8 @@ export class BrowserPolicyService extends PolicyService {
 
   constructor(
     stateService: StateService,
-    organizationService: OrganizationService,
-    autofillSettingsService: AutofillSettingsServiceAbstraction,
+    organizationService: OrganizationService
   ) {
-    super(stateService, organizationService, autofillSettingsService);
-    this._policies
-      .pipe(this.autofillSettingsService.handleActivateAutofillPolicy.bind(this))
-      .subscribe();
+    super(stateService, organizationService);
   }
 }

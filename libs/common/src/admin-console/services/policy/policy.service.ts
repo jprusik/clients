@@ -22,7 +22,6 @@ export class PolicyService implements InternalPolicyServiceAbstraction {
   constructor(
     protected stateService: StateService,
     private organizationService: OrganizationService,
-    protected autofillSettingsService: AutofillSettingsServiceAbstraction,
   ) {
     this.stateService.activeAccountUnlocked$
       .pipe(

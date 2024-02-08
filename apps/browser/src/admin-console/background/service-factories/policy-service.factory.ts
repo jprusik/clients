@@ -1,10 +1,6 @@
 import { PolicyService as AbstractPolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 
 import {
-  AutofillSettingsServiceInitOptions,
-  autofillSettingsServiceFactory,
-} from "../../../autofill/background/service_factories/autofill-settings-service.factory";
-import {
   CachedServices,
   factory,
   FactoryOptions,
@@ -24,8 +20,7 @@ type PolicyServiceFactoryOptions = FactoryOptions;
 
 export type PolicyServiceInitOptions = PolicyServiceFactoryOptions &
   StateServiceInitOptions &
-  OrganizationServiceInitOptions &
-  AutofillSettingsServiceInitOptions;
+  OrganizationServiceInitOptions;
 
 export function policyServiceFactory(
   cache: { policyService?: AbstractPolicyService } & CachedServices,
@@ -39,7 +34,6 @@ export function policyServiceFactory(
       new BrowserPolicyService(
         await stateServiceFactory(cache, opts),
         await organizationServiceFactory(cache, opts),
-        await autofillSettingsServiceFactory(cache, opts),
       ),
   );
 }

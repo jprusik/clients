@@ -1,9 +1,10 @@
-import { filter, firstValueFrom, map, Observable, switchMap, tap } from "rxjs";
+import { filter, switchMap, tap, firstValueFrom, map, Observable } from "rxjs";
 
 import {
   AutofillOverlayVisibility,
   InlineMenuVisibilitySetting,
 } from "../../../../../apps/browser/src/autofill/utils/autofill-overlay.enum";
+import { PolicyService } from "../../admin-console/abstractions/policy/policy.service.abstraction";
 import { PolicyType } from "../../admin-console/enums/index";
 import { Policy } from "../../admin-console/models/domain/policy";
 import {
@@ -90,7 +91,10 @@ export class AutofillSettingsService implements AutofillSettingsServiceAbstracti
   private inlineMenuVisibilityState: GlobalState<InlineMenuVisibilitySetting>;
   readonly inlineMenuVisibility$: Observable<InlineMenuVisibilitySetting>;
 
-  constructor(private stateProvider: StateProvider) {
+  constructor(
+    private stateProvider: StateProvider,
+    private policyService: PolicyService,
+  ) {
     this.autofillOnPageLoadState = this.stateProvider.getActive(AUTOFILL_ON_PAGE_LOAD);
     this.autofillOnPageLoad$ = this.autofillOnPageLoadState.state$.pipe(map((x) => x ?? false));
 

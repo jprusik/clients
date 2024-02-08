@@ -390,7 +390,6 @@ export default class MainBackground {
       this.accountService,
       this.environmentService,
     );
-    this.autofillSettingsService = new AutofillSettingsService(this.stateProvider);
     this.platformUtilsService = new BrowserPlatformUtilsService(
       this.messagingService,
       (clipboardValue, clearMs) => {
@@ -452,10 +451,10 @@ export default class MainBackground {
       this.stateService,
       this.stateProvider,
     );
-    this.policyService = new BrowserPolicyService(
-      this.stateService,
-      this.organizationService,
-      this.autofillSettingsService,
+    this.policyService = new BrowserPolicyService(this.stateService, this.organizationService);
+    this.autofillSettingsService = new AutofillSettingsService(
+      this.stateProvider,
+      this.policyService,
     );
     this.policyApiService = new PolicyApiService(
       this.policyService,
@@ -1043,6 +1042,7 @@ export default class MainBackground {
       this.vaultTimeoutSettingsService.clear(userId),
       this.keyConnectorService.clear(),
       this.vaultFilterService.clear(),
+      // We intentionally do not clear the autofillSettingsService
     ]);
 
     //Needs to be checked before state is cleaned

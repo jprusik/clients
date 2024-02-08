@@ -916,7 +916,7 @@ import { ModalService } from "./modal.service";
     {
       provide: AutofillSettingsServiceAbstraction,
       useClass: AutofillSettingsService,
-      deps: [StateProvider],
+      deps: [StateProvider, PolicyServiceAbstraction],
     },
     {
       provide: BiometricStateService,
