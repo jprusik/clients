@@ -358,11 +358,7 @@ export class Main {
 
     this.organizationUserService = new OrganizationUserServiceImplementation(this.apiService);
 
-    this.policyService = new PolicyService(
-      this.stateService,
-      this.organizationService,
-      this.autofillSettingsService,
-    );
+    this.policyService = new PolicyService(this.stateService, this.organizationService);
 
     this.policyApiService = new PolicyApiService(
       this.policyService,

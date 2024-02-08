@@ -93,7 +93,7 @@ export class AutofillSettingsService implements AutofillSettingsServiceAbstracti
 
   constructor(
     private stateProvider: StateProvider,
-    private policyService: PolicyService,
+    policyService: PolicyService,
   ) {
     this.autofillOnPageLoadState = this.stateProvider.getActive(AUTOFILL_ON_PAGE_LOAD);
     this.autofillOnPageLoad$ = this.autofillOnPageLoadState.state$.pipe(map((x) => x ?? false));
@@ -124,6 +124,8 @@ export class AutofillSettingsService implements AutofillSettingsServiceAbstracti
     this.inlineMenuVisibility$ = this.inlineMenuVisibilityState.state$.pipe(
       map((x) => x ?? AutofillOverlayVisibility.Off),
     );
+
+    policyService.policies$.pipe(this.handleActivateAutofillPolicy.bind(this)).subscribe();
   }
 
   async setAutofillOnPageLoad(newValue: boolean): Promise<void> {

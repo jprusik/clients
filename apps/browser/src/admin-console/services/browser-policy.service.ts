@@ -1,10 +1,8 @@
 import { BehaviorSubject } from "rxjs";
 import { Jsonify } from "type-fest";
 
-import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
 import { PolicyService } from "@bitwarden/common/admin-console/services/policy/policy.service";
-import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 
 import { browserSession, sessionSync } from "../../platform/decorators/session-sync-observable";
 
@@ -15,11 +13,4 @@ export class BrowserPolicyService extends PolicyService {
     initializeAs: "array",
   })
   protected _policies: BehaviorSubject<Policy[]>;
-
-  constructor(
-    stateService: StateService,
-    organizationService: OrganizationService
-  ) {
-    super(stateService, organizationService);
-  }
 }

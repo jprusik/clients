@@ -1,6 +1,10 @@
 import { AutofillSettingsService } from "@bitwarden/common/autofill/services/autofill-settings.service";
 
 import {
+  policyServiceFactory,
+  PolicyServiceInitOptions,
+} from "../../../admin-console/background/service-factories/policy-service.factory";
+import {
   CachedServices,
   factory,
   FactoryOptions,
@@ -9,10 +13,6 @@ import {
   stateProviderFactory,
   StateProviderInitOptions,
 } from "../../../platform/background/service-factories/state-provider.factory";
-import {
-  policyServiceFactory,
-  PolicyServiceInitOptions,
-} from "../../../admin-console/background/service-factories/policy-service.factory";
 
 export type AutofillSettingsServiceInitOptions = FactoryOptions &
   StateProviderInitOptions &
