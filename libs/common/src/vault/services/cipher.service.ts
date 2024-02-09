@@ -6,6 +6,7 @@ import { SearchService } from "../../abstractions/search.service";
 import { SettingsService } from "../../abstractions/settings.service";
 import { AutofillSettingsServiceAbstraction } from "../../autofill/services/autofill-settings.service";
 import { ErrorResponse } from "../../models/response/error.response";
+import { ListResponse } from "../../models/response/list.response";
 import { View } from "../../models/view/view";
 import { ConfigServiceAbstraction } from "../../platform/abstractions/config/config.service.abstraction";
 import { CryptoService } from "../../platform/abstractions/crypto.service";
@@ -389,6 +390,24 @@ export class CipherService implements CipherServiceAbstraction {
 
   async getAllFromApiForOrganization(organizationId: string): Promise<CipherView[]> {
     const response = await this.apiService.getCiphersOrganization(organizationId);
+    return await this.decryptOrganizationCiphersResponse(response, organizationId);
+  }
+
+  async getManyFromApiForOrganization(organizationId: string): Promise<CipherView[]> {
+    const response = await this.apiService.send(
+      "GET",
+      "/ciphers/organization-details/assigned?organizationId=" + organizationId,
+      null,
+      true,
+      true,
+    );
+    return this.decryptOrganizationCiphersResponse(response, organizationId);
+  }
+
+  private async decryptOrganizationCiphersResponse(
+    response: ListResponse<CipherResponse>,
+    organizationId: string,
+  ): Promise<CipherView[]> {
     if (response?.data == null || response.data.length < 1) {
       return [];
     }
