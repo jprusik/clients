@@ -23,7 +23,6 @@ import {
   openAddEditVaultItemPopout,
 } from "../../vault/popup/utils/vault-popout-window";
 import { SHOW_AUTOFILL_BUTTON } from "../constants";
-import LockedVaultPendingNotificationsItem from "../notification/models/locked-vault-pending-notifications-item";
 import { AutofillService, PageDetail } from "../services/abstractions/autofill.service";
 import {
   InlineMenuVisibilitySetting,
@@ -31,6 +30,7 @@ import {
   AutofillOverlayPort,
 } from "../utils/autofill-overlay.enum";
 
+import { LockedVaultPendingNotificationsData } from "./abstractions/notification.background";
 import {
   FocusedFieldData,
   OverlayBackgroundExtensionMessageHandlers,
@@ -525,8 +525,8 @@ class OverlayBackground implements OverlayBackgroundInterface {
     const { sender } = port;
 
     this.closeOverlay(port);
-    const retryMessage: LockedVaultPendingNotificationsItem = {
-      commandToRetry: { msg: { command: "openAutofillOverlay" }, sender },
+    const retryMessage: LockedVaultPendingNotificationsData = {
+      commandToRetry: { message: { command: "openAutofillOverlay" }, sender },
       target: "overlay.background",
     };
     await BrowserApi.tabSendMessageData(
@@ -574,7 +574,7 @@ class OverlayBackground implements OverlayBackgroundInterface {
   private async unlockCompleted(message: OverlayBackgroundExtensionMessage) {
     await this.getAuthStatus();
 
-    if (message.data?.commandToRetry?.msg?.command === "openAutofillOverlay") {
+    if (message.data?.commandToRetry?.message?.command === "openAutofillOverlay") {
       await this.openOverlay(true);
     }
   }
