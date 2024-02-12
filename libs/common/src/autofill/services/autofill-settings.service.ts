@@ -16,7 +16,7 @@ import {
   StateProvider,
 } from "../../platform/state";
 
-const AUTOFILL_ON_PAGE_LOAD = new KeyDefinition(AUTOFILL_SETTINGS_DISK, "autoFillOnPageLoad", {
+const AUTOFILL_ON_PAGE_LOAD = new KeyDefinition(AUTOFILL_SETTINGS_DISK, "autofillOnPageLoad", {
   deserializer: (value: boolean) => value ?? false,
 });
 
