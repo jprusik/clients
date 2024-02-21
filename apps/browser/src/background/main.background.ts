@@ -47,6 +47,10 @@ import {
   AutofillSettingsServiceAbstraction,
   AutofillSettingsService,
 } from "@bitwarden/common/autofill/services/autofill-settings.service";
+import {
+  UserNotificationSettingsService,
+  UserNotificationSettingsServiceAbstraction,
+} from "@bitwarden/common/autofill/services/user-notification-settings.service";
 import { AppIdService as AppIdServiceAbstraction } from "@bitwarden/common/platform/abstractions/app-id.service";
 import { ConfigApiServiceAbstraction } from "@bitwarden/common/platform/abstractions/config/config-api.service.abstraction";
 import { CryptoFunctionService as CryptoFunctionServiceAbstraction } from "@bitwarden/common/platform/abstractions/crypto-function.service";
@@ -234,6 +238,7 @@ export default class MainBackground {
   searchService: SearchServiceAbstraction;
   notificationsService: NotificationsServiceAbstraction;
   stateService: StateServiceAbstraction;
+  userNotificationSettingsService: UserNotificationSettingsServiceAbstraction;
   autofillSettingsService: AutofillSettingsServiceAbstraction;
   systemService: SystemServiceAbstraction;
   eventCollectionService: EventCollectionServiceAbstraction;
@@ -400,6 +405,7 @@ export default class MainBackground {
       this.environmentService,
       migrationRunner,
     );
+    this.userNotificationSettingsService = new UserNotificationSettingsService(this.stateProvider);
     this.platformUtilsService = new BrowserPlatformUtilsService(
       this.messagingService,
       (clipboardValue, clearMs) => {
@@ -687,6 +693,7 @@ export default class MainBackground {
       this.logService,
       this.settingsService,
       this.userVerificationService,
+      this.userNotificationSettingsService,
     );
     this.auditService = new AuditService(this.cryptoFunctionService, this.apiService);
 
@@ -814,6 +821,7 @@ export default class MainBackground {
       this.policyService,
       this.folderService,
       this.stateService,
+      this.userNotificationSettingsService,
       this.environmentService,
     );
     this.overlayBackground = new OverlayBackground(
@@ -1052,7 +1060,11 @@ export default class MainBackground {
       this.vaultTimeoutSettingsService.clear(userId),
       this.keyConnectorService.clear(),
       this.vaultFilterService.clear(),
-      // We intentionally do not clear the autofillSettingsService
+      /*
+      We intentionally do not clear:
+        - autofillSettingsService
+        - userNotificationSettingsService
+      */
     ]);
 
     //Needs to be checked before state is cleaned

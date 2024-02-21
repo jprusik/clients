@@ -4,6 +4,7 @@ import { PolicyService } from "@bitwarden/common/admin-console/abstractions/poli
 import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
+import { UserNotificationSettingsServiceAbstraction } from "@bitwarden/common/autofill/services/user-notification-settings.service";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { ThemeType } from "@bitwarden/common/platform/enums";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
@@ -43,6 +44,7 @@ export default class NotificationBackground {
     private policyService: PolicyService,
     private folderService: FolderService,
     private stateService: BrowserStateService,
+    private userNotificationSettingsService: UserNotificationSettingsServiceAbstraction,
     private environmentService: EnvironmentService,
   ) {}
 
@@ -249,9 +251,11 @@ export default class NotificationBackground {
       normalizedUsername = normalizedUsername.toLowerCase();
     }
 
-    const disabledAddLogin = await this.stateService.getDisableAddLoginNotification();
+    const addLoginIsEnabled = await firstValueFrom(
+      this.userNotificationSettingsService.enableAddedLoginPrompt$,
+    );
     if (authStatus === AuthenticationStatus.Locked) {
-      if (disabledAddLogin) {
+      if (!addLoginIsEnabled) {
         return;
       }
 
@@ -266,7 +270,7 @@ export default class NotificationBackground {
       (c) => c.login.username != null && c.login.username.toLowerCase() === normalizedUsername,
     );
     if (usernameMatches.length === 0) {
-      if (disabledAddLogin) {
+      if (!addLoginIsEnabled) {
         return;
       }
 
@@ -277,9 +281,10 @@ export default class NotificationBackground {
       usernameMatches.length === 1 &&
       usernameMatches[0].login.password !== loginInfo.password
     ) {
-      const disabledChangePassword =
-        await this.stateService.getDisableChangedPasswordNotification();
-      if (disabledChangePassword) {
+      const changePasswordIsEnabled = await firstValueFrom(
+        this.userNotificationSettingsService.enableChangedPasswordPrompt$,
+      );
+      if (!changePasswordIsEnabled) {
         return;
       }
       // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.

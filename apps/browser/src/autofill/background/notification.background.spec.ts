@@ -2,6 +2,7 @@ import { mock } from "jest-mock-extended";
 
 import { PolicyService } from "@bitwarden/common/admin-console/services/policy/policy.service";
 import { AuthService } from "@bitwarden/common/auth/services/auth.service";
+import { UserNotificationSettingsService } from "@bitwarden/common/autofill/services/user-notification-settings.service";
 import { EnvironmentService } from "@bitwarden/common/platform/services/environment.service";
 import { CipherService } from "@bitwarden/common/vault/services/cipher.service";
 import { FolderService } from "@bitwarden/common/vault/services/folder/folder.service";
@@ -21,6 +22,7 @@ describe("NotificationBackground", () => {
   const policyService = mock<PolicyService>();
   const folderService = mock<FolderService>();
   const stateService = mock<BrowserStateService>();
+  const userNotificationSettingsService = mock<UserNotificationSettingsService>();
   const environmentService = mock<EnvironmentService>();
 
   beforeEach(() => {
@@ -31,6 +33,7 @@ describe("NotificationBackground", () => {
       policyService,
       folderService,
       stateService,
+      userNotificationSettingsService,
       environmentService,
     );
   });
