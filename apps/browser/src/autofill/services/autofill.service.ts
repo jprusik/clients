@@ -6,11 +6,14 @@ import { AutofillSettingsServiceAbstraction } from "@bitwarden/common/autofill/s
 import { DomainSettingsServiceAbstraction } from "@bitwarden/common/autofill/services/domain-settings.service";
 import { InlineMenuVisibilitySetting } from "@bitwarden/common/autofill/types";
 import { EventType } from "@bitwarden/common/enums";
-import { UriMatchStrategySetting } from "@bitwarden/common/models/domain/domain-service";
+import {
+  UriMatchStrategySetting,
+  UriMatchStrategy,
+} from "@bitwarden/common/models/domain/domain-service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { TotpService } from "@bitwarden/common/vault/abstractions/totp.service";
-import { FieldType, UriMatchType, CipherType } from "@bitwarden/common/vault/enums";
+import { FieldType, CipherType } from "@bitwarden/common/vault/enums";
 import { CipherRepromptType } from "@bitwarden/common/vault/enums/cipher-reprompt-type";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { FieldView } from "@bitwarden/common/vault/models/view/field.view";
@@ -587,7 +590,7 @@ export default class AutofillService implements AutofillServiceInterface {
     let totp: AutofillField = null;
     const login = options.cipher.login;
     fillScript.savedUrls =
-      login?.uris?.filter((u) => u.match != UriMatchType.Never).map((u) => u.uri) ?? [];
+      login?.uris?.filter((u) => u.match != UriMatchStrategy.Never).map((u) => u.uri) ?? [];
 
     fillScript.untrustedIframe = await this.inUntrustedIframe(pageDetails.url, options);
 
