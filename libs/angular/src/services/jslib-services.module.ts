@@ -91,7 +91,7 @@ import {
   BadgeSettingsService,
 } from "@bitwarden/common/autofill/services/badge-settings.service";
 import {
-  DomainSettingsServiceAbstraction,
+  DefaultDomainSettingsService,
   DomainSettingsService,
 } from "@bitwarden/common/autofill/services/domain-settings.service";
 import { BillingApiServiceAbstraction } from "@bitwarden/common/billing/abstractions/billilng-api.service.abstraction";
@@ -354,7 +354,7 @@ import { ModalService } from "./modal.service";
         searchService: SearchServiceAbstraction,
         stateService: StateServiceAbstraction,
         autofillSettingsService: AutofillSettingsServiceAbstraction,
-        domainSettingsService: DomainSettingsServiceAbstraction,
+        domainSettingsService: DefaultDomainSettingsService,
         encryptService: EncryptService,
         fileUploadService: CipherFileUploadServiceAbstraction,
         configService: ConfigServiceAbstraction,
@@ -967,7 +967,7 @@ import { ModalService } from "./modal.service";
       deps: [StateProvider],
     },
     {
-      provide: DomainSettingsServiceAbstraction,
+      provide: DefaultDomainSettingsService,
       useClass: DomainSettingsService,
       deps: [StateProvider],
     },

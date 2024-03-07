@@ -4,10 +4,10 @@ import { FakeStateProvider, FakeAccountService, mockAccountServiceWith } from ".
 import { Utils } from "../../platform/misc/utils";
 import { UserId } from "../../types/guid";
 
-import { DomainSettingsService, DomainSettingsServiceAbstraction } from "./domain-settings.service";
+import { DomainSettingsService, DefaultDomainSettingsService } from "./domain-settings.service";
 
 describe("DomainSettingsService", () => {
-  let domainSettingsService: DomainSettingsServiceAbstraction;
+  let domainSettingsService: DefaultDomainSettingsService;
   const mockUserId = Utils.newGuid() as UserId;
   const accountService: FakeAccountService = mockAccountServiceWith(mockUserId);
   const fakeStateProvider: FakeStateProvider = new FakeStateProvider(accountService);

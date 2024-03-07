@@ -56,7 +56,7 @@ import {
   BadgeSettingsService,
 } from "@bitwarden/common/autofill/services/badge-settings.service";
 import {
-  DomainSettingsServiceAbstraction,
+  DefaultDomainSettingsService,
   DomainSettingsService,
 } from "@bitwarden/common/autofill/services/domain-settings.service";
 import {
@@ -262,7 +262,7 @@ export default class MainBackground {
   userNotificationSettingsService: UserNotificationSettingsServiceAbstraction;
   autofillSettingsService: AutofillSettingsServiceAbstraction;
   badgeSettingsService: BadgeSettingsServiceAbstraction;
-  domainSettingsService: DomainSettingsServiceAbstraction;
+  domainSettingsService: DefaultDomainSettingsService;
   systemService: SystemServiceAbstraction;
   eventCollectionService: EventCollectionServiceAbstraction;
   eventUploadService: EventUploadServiceAbstraction;
@@ -1117,7 +1117,6 @@ export default class MainBackground {
       this.vaultFilterService.clear(),
       this.biometricStateService.logout(userId),
       this.providerService.save(null, userId),
-      this.domainSettingsService.clear(),
       /* We intentionally do not clear:
        *  - autofillSettingsService
        *  - badgeSettingsService

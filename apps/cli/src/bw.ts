@@ -37,7 +37,7 @@ import { UserVerificationService } from "@bitwarden/common/auth/services/user-ve
 import { AutofillSettingsServiceAbstraction } from "@bitwarden/common/autofill/services/autofill-settings.service";
 import {
   DomainSettingsService,
-  DomainSettingsServiceAbstraction,
+  DefaultDomainSettingsService,
 } from "@bitwarden/common/autofill/services/domain-settings.service";
 import { ClientType } from "@bitwarden/common/enums";
 import { ConfigApiServiceAbstraction } from "@bitwarden/common/platform/abstractions/config/config-api.service.abstraction";
@@ -194,7 +194,7 @@ export class Main {
   pinCryptoService: PinCryptoServiceAbstraction;
   stateService: StateService;
   autofillSettingsService: AutofillSettingsServiceAbstraction;
-  domainSettingsService: DomainSettingsServiceAbstraction;
+  domainSettingsService: DefaultDomainSettingsService;
   organizationService: OrganizationService;
   providerService: ProviderService;
   twoFactorService: TwoFactorService;

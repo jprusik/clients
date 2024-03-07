@@ -1,4 +1,4 @@
-import { StateDefinitionLike, MigrationHelper } from "../migration-helper";
+import { KeyDefinitionLike, MigrationHelper } from "../migration-helper";
 import { Migrator } from "../migrator";
 
 const UriMatchStrategy = {
@@ -25,29 +25,36 @@ type ExpectedGlobalState = {
   neverDomains?: { [key: string]: null };
 };
 
-const domainSettingsStateDefinition: {
-  stateDefinition: StateDefinitionLike;
-} = {
+const defaultUriMatchStrategyDefinition: KeyDefinitionLike = {
   stateDefinition: {
     name: "domainSettings",
   },
+  key: "defaultUriMatchStrategy",
+};
+
+const equivalentDomainsDefinition: KeyDefinitionLike = {
+  stateDefinition: {
+    name: "domainSettings",
+  },
+  key: "equivalentDomains",
+};
+
+const neverDomainsDefinition: KeyDefinitionLike = {
+  stateDefinition: {
+    name: "domainSettings",
+  },
+  key: "neverDomains",
 };
 
 export class DomainSettingsMigrator extends Migrator<29, 30> {
   async migrate(helper: MigrationHelper): Promise<void> {
+    let updateAccount = false;
+
     // global state ("neverDomains")
     const globalState = await helper.get<ExpectedGlobalState>("global");
 
     if (globalState?.neverDomains != null) {
-      await helper.setToGlobal(
-        {
-          stateDefinition: {
-            name: "domainSettings",
-          },
-          key: "neverDomains",
-        },
-        globalState.neverDomains,
-      );
+      await helper.setToGlobal(neverDomainsDefinition, globalState.neverDomains);
 
       // delete `neverDomains` from state global
       delete globalState.neverDomains;
@@ -67,24 +74,27 @@ export class DomainSettingsMigrator extends Migrator<29, 30> {
       if (accountSettings?.defaultUriMatch != undefined) {
         await helper.setToUser(
           userId,
-          { ...domainSettingsStateDefinition, key: "defaultUriMatchStrategy" },
+          defaultUriMatchStrategyDefinition,
           accountSettings.defaultUriMatch,
         );
         delete account.settings.defaultUriMatch;
 
-        // update the state account settings with the migrated values deleted
-        await helper.set(userId, account);
+        updateAccount = true;
       }
 
       if (accountSettings?.settings?.equivalentDomains != undefined) {
         await helper.setToUser(
           userId,
-          { ...domainSettingsStateDefinition, key: "equivalentDomains" },
+          equivalentDomainsDefinition,
           accountSettings.settings.equivalentDomains,
         );
         delete account.settings.settings.equivalentDomains;
         delete account.settings.settings;
 
+        updateAccount = true;
+      }
+
+      if (updateAccount) {
         // update the state account settings with the migrated values deleted
         await helper.set(userId, account);
       }
@@ -92,12 +102,12 @@ export class DomainSettingsMigrator extends Migrator<29, 30> {
   }
 
   async rollback(helper: MigrationHelper): Promise<void> {
+    let updateAccount = false;
+
     // global state ("neverDomains")
     const globalState = (await helper.get<ExpectedGlobalState>("global")) || {};
-    const neverDomains: { [key: string]: null } = await helper.getFromGlobal({
-      ...domainSettingsStateDefinition,
-      key: "neverDomains",
-    });
+    const neverDomains: { [key: string]: null } =
+      await helper.getFromGlobal(neverDomainsDefinition);
 
     if (neverDomains != null) {
       await helper.set<ExpectedGlobalState>("global", {
@@ -106,13 +116,7 @@ export class DomainSettingsMigrator extends Migrator<29, 30> {
       });
 
       // remove the global state provider framework key for `neverDomains`
-      await helper.setToGlobal(
-        {
-          ...domainSettingsStateDefinition,
-          key: "neverDomains",
-        },
-        null,
-      );
+      await helper.setToGlobal(neverDomainsDefinition, null);
     }
 
     // account state ("defaultUriMatchStrategy" and "equivalentDomains")
@@ -124,42 +128,40 @@ export class DomainSettingsMigrator extends Migrator<29, 30> {
     async function rollbackAccount(userId: string, account: ExpectedAccountState): Promise<void> {
       let settings = account?.settings || {};
 
-      const defaultUriMatchStrategy: UriMatchStrategySetting = await helper.getFromUser(userId, {
-        ...domainSettingsStateDefinition,
-        key: "defaultUriMatchStrategy",
-      });
+      const defaultUriMatchStrategy: UriMatchStrategySetting = await helper.getFromUser(
+        userId,
+        defaultUriMatchStrategyDefinition,
+      );
 
-      const equivalentDomains: string[][] = await helper.getFromUser(userId, {
-        ...domainSettingsStateDefinition,
-        key: "equivalentDomains",
-      });
+      const equivalentDomains: string[][] = await helper.getFromUser(
+        userId,
+        equivalentDomainsDefinition,
+      );
 
       // update new settings and remove the account state provider framework keys for the rolled back values
       if (defaultUriMatchStrategy != null) {
         settings = { ...settings, defaultUriMatch: defaultUriMatchStrategy };
 
-        await helper.setToUser(
-          userId,
-          { ...domainSettingsStateDefinition, key: "defaultUriMatchStrategy" },
-          null,
-        );
+        await helper.setToUser(userId, defaultUriMatchStrategyDefinition, null);
+
+        updateAccount = true;
       }
 
       if (equivalentDomains != null) {
         settings = { ...settings, settings: { equivalentDomains } };
 
-        await helper.setToUser(
-          userId,
-          { ...domainSettingsStateDefinition, key: "equivalentDomains" },
-          null,
-        );
+        await helper.setToUser(userId, equivalentDomainsDefinition, null);
+
+        updateAccount = true;
       }
 
       // commit updated settings to state
-      await helper.set(userId, {
-        ...account,
-        settings,
-      });
+      if (updateAccount) {
+        await helper.set(userId, {
+          ...account,
+          settings,
+        });
+      }
     }
   }
 }

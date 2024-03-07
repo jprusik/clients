@@ -3,7 +3,7 @@ import { mock, mockReset } from "jest-mock-extended";
 import { UserVerificationService } from "@bitwarden/common/auth/services/user-verification/user-verification.service";
 import { AutofillOverlayVisibility } from "@bitwarden/common/autofill/constants";
 import { AutofillSettingsService } from "@bitwarden/common/autofill/services/autofill-settings.service";
-import { DomainSettingsServiceAbstraction } from "@bitwarden/common/autofill/services/domain-settings.service";
+import { DefaultDomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
 import { EventType } from "@bitwarden/common/enums";
 import { UriMatchStrategy } from "@bitwarden/common/models/domain/domain-service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
@@ -47,7 +47,7 @@ describe("AutofillService", () => {
   const cipherService = mock<CipherService>();
   const stateService = mock<BrowserStateService>();
   const autofillSettingsService = mock<AutofillSettingsService>();
-  const domainSettingsService = mock<DomainSettingsServiceAbstraction>();
+  const domainSettingsService = mock<DefaultDomainSettingsService>();
   const totpService = mock<TotpService>();
   const eventCollectionService = mock<EventCollectionService>();
   const logService = mock<LogService>();

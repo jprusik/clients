@@ -29,7 +29,7 @@ function exampleJSON() {
     "user-2": {
       settings: {
         settings: {
-          equivalentDomains: ["apple.com", "icloud.com"],
+          equivalentDomains: [["apple.com", "icloud.com"]],
         },
         otherStuff: "otherStuff4",
       },
@@ -56,7 +56,7 @@ function rollbackJSON() {
     global_domainSettings_neverDomains: mockNeverDomains,
     "user_user-1_domainSettings_defaultUriMatchStrategy": 3,
     "user_user-1_domainSettings_equivalentDomains": [] as string[][],
-    "user_user-2_domainSettings_equivalentDomains": ["apple.com", "icloud.com"],
+    "user_user-2_domainSettings_equivalentDomains": [["apple.com", "icloud.com"]],
     "user_user-3_domainSettings_defaultUriMatchStrategy": 1,
     global: {
       otherStuff: "otherStuff1",
@@ -109,7 +109,7 @@ describe("DomainSettingsMigrator", () => {
 
     it("should remove global neverDomains and defaultUriMatch and equivalentDomains settings from all accounts", async () => {
       await sut.migrate(helper);
-      expect(helper.set).toHaveBeenCalledTimes(5);
+      expect(helper.set).toHaveBeenCalledTimes(4);
       expect(helper.set).toHaveBeenCalledWith("global", {
         otherStuff: "otherStuff1",
       });
@@ -231,7 +231,7 @@ describe("DomainSettingsMigrator", () => {
       expect(helper.set).toHaveBeenCalledWith("user-2", {
         settings: {
           settings: {
-            equivalentDomains: ["apple.com", "icloud.com"],
+            equivalentDomains: [["apple.com", "icloud.com"]],
           },
           otherStuff: "otherStuff4",
         },

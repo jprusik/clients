@@ -13,14 +13,16 @@ import {
   GlobalState,
   KeyDefinition,
   StateProvider,
+  UserKeyDefinition,
 } from "../../platform/state";
 
 const NEVER_DOMAINS = new KeyDefinition(DOMAIN_SETTINGS_DISK, "neverDomains", {
   deserializer: (value: NeverDomains) => value ?? null,
 });
 
-const EQUIVALENT_DOMAINS = new KeyDefinition(DOMAIN_SETTINGS_DISK, "equivalentDomains", {
+const EQUIVALENT_DOMAINS = new UserKeyDefinition(DOMAIN_SETTINGS_DISK, "equivalentDomains", {
   deserializer: (value: EquivalentDomains) => value ?? null,
+  clearOn: ["logout"],
 });
 
 const DEFAULT_URI_MATCH_STRATEGY = new KeyDefinition(
@@ -31,7 +33,7 @@ const DEFAULT_URI_MATCH_STRATEGY = new KeyDefinition(
   },
 );
 
-export abstract class DomainSettingsServiceAbstraction {
+export abstract class DefaultDomainSettingsService {
   neverDomains$: Observable<NeverDomains>;
   setNeverDomains: (newValue: NeverDomains) => Promise<void>;
   equivalentDomains$: Observable<EquivalentDomains>;
@@ -39,10 +41,9 @@ export abstract class DomainSettingsServiceAbstraction {
   defaultUriMatchStrategy$: Observable<UriMatchStrategySetting>;
   setDefaultUriMatchStrategy: (newValue: UriMatchStrategySetting) => Promise<void>;
   getUrlEquivalentDomains: (url: string) => Promise<Set<string>>;
-  clear: () => Promise<void>;
 }
 
-export class DomainSettingsService implements DomainSettingsServiceAbstraction {
+export class DomainSettingsService implements DefaultDomainSettingsService {
   private neverDomainsState: GlobalState<NeverDomains>;
   readonly neverDomains$: Observable<NeverDomains>;
 
@@ -96,13 +97,5 @@ export class DomainSettingsService implements DomainSettingsServiceAbstraction {
     }
 
     return new Set(result);
-  }
-
-  async clear() {
-    await Promise.all([
-      this.setNeverDomains(null),
-      this.setEquivalentDomains(null),
-      this.setDefaultUriMatchStrategy(null),
-    ]);
   }
 }
