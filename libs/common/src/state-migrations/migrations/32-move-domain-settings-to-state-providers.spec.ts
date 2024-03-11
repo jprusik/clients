@@ -3,7 +3,7 @@ import { any, MockProxy } from "jest-mock-extended";
 import { StateDefinitionLike, MigrationHelper } from "../migration-helper";
 import { mockMigrationHelper } from "../migration-helper.spec";
 
-import { DomainSettingsMigrator } from "./30-move-domain-settings-to-state-providers";
+import { DomainSettingsMigrator } from "./32-move-domain-settings-to-state-providers";
 
 const mockNeverDomains = { "bitwarden.test": null, locahost: null, "www.example.com": null } as {
   [key: string]: null;
@@ -103,8 +103,8 @@ describe("DomainSettingsMigrator", () => {
 
   describe("migrate", () => {
     beforeEach(() => {
-      helper = mockMigrationHelper(exampleJSON(), 29);
-      sut = new DomainSettingsMigrator(29, 30);
+      helper = mockMigrationHelper(exampleJSON(), 31);
+      sut = new DomainSettingsMigrator(31, 32);
     });
 
     it("should remove global neverDomains and defaultUriMatch and equivalentDomains settings from all accounts", async () => {
@@ -174,8 +174,8 @@ describe("DomainSettingsMigrator", () => {
 
   describe("rollback", () => {
     beforeEach(() => {
-      helper = mockMigrationHelper(rollbackJSON(), 30);
-      sut = new DomainSettingsMigrator(29, 30);
+      helper = mockMigrationHelper(rollbackJSON(), 32);
+      sut = new DomainSettingsMigrator(31, 32);
     });
 
     it("should null out new values globally and for each account", async () => {
