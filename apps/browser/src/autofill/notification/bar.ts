@@ -1,3 +1,4 @@
+import {LitElement, html, css} from 'lit';
 import { ThemeType } from "@bitwarden/common/platform/enums";
 import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
 import type { FolderView } from "@bitwarden/common/vault/models/view/folder.view";
@@ -5,6 +6,10 @@ import type { FolderView } from "@bitwarden/common/vault/models/view/folder.view
 import { FilelessImportPort, FilelessImportType } from "../../tools/enums/fileless-import.enums";
 import { AdjustNotificationBarMessageData } from "../background/abstractions/notification.background";
 import { buildSvgDomElement } from "../utils";
+import {NotificationMessage} from "./message";
+// import "./message";
+// import "./close-button";
+import {CloseButton} from "./close-button";
 import { circleCheckIcon } from "../utils/svg-icons";
 
 import {
@@ -64,6 +69,9 @@ function initNotificationBar(message: NotificationBarWindowMessage) {
 
   setupLogoLink(i18n);
 
+  const notificationBarOuterWrapper = document.getElementById("notification-bar-outer-wrapper");
+
+  notificationBarOuterWrapper.append(`<close-button @click="${() => this.handleNotificationClose()}"></close-button>`)
   // i18n for "Add" template
   const addTemplate = document.getElementById("template-add") as HTMLTemplateElement;
 
@@ -134,15 +142,21 @@ function initNotificationBar(message: NotificationBarWindowMessage) {
     handleTypeFilelessImport();
   }
 
-  closeButton.addEventListener("click", (e) => {
-    e.preventDefault();
-    sendPlatformMessage({
-      command: "bgCloseNotificationBar",
-    });
-  });
+  // closeButton.addEventListener("click", (e) => {
+  //   e.preventDefault();
+  //   sendPlatformMessage({
+  //     command: "bgCloseNotificationBar",
+  //   });
+  // });
 
   globalThis.addEventListener("resize", adjustHeight);
   adjustHeight();
+}
+
+function handleNotificationClose() {
+  sendPlatformMessage({
+    command: "bgCloseNotificationBar",
+  });
 }
 
 function handleTypeAdd() {

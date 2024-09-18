@@ -312,6 +312,30 @@ export default class NotificationBackground {
     await this.checkNotificationQueue(tab);
   }
 
+  // private async pushAddCardToQueue(
+  //   loginDomain: string,
+  //   loginInfo: AddLoginMessageData,
+  //   tab: chrome.tabs.Tab,
+  //   isVaultLocked = false,
+  // ) {
+  //   // remove any old messages for this tab
+  //   this.removeTabFromNotificationQueue(tab);
+  //   const launchTimestamp = new Date().getTime();
+  //   const message: AddLoginQueueMessage = {
+  //     type: NotificationQueueMessageType.AddLogin,
+  //     username: loginInfo.username,
+  //     password: loginInfo.password,
+  //     domain: loginDomain,
+  //     uri: loginInfo.url,
+  //     tab: tab,
+  //     launchTimestamp,
+  //     expires: new Date(launchTimestamp + NOTIFICATION_BAR_LIFESPAN_MS),
+  //     wasVaultLocked: isVaultLocked,
+  //   };
+  //   this.notificationQueue.push(message);
+  //   await this.checkNotificationQueue(tab);
+  // }
+
   /**
    * Adds a change password message to the notification queue, prompting the user
    * to update the password for a login that has changed.
@@ -499,6 +523,7 @@ export default class NotificationBackground {
     message: NotificationBackgroundExtensionMessage,
     sender: chrome.runtime.MessageSender,
   ) {
+    console.log('handleSaveCipherMessage message:', message);
     if ((await this.getAuthStatus()) < AuthenticationStatus.Unlocked) {
       await BrowserApi.tabSendMessageData(sender.tab, "addToLockedVaultPendingNotifications", {
         commandToRetry: {
@@ -529,6 +554,8 @@ export default class NotificationBackground {
   private async saveOrUpdateCredentials(tab: chrome.tabs.Tab, edit: boolean, folderId?: string) {
     for (let i = this.notificationQueue.length - 1; i >= 0; i--) {
       const queueMessage = this.notificationQueue[i];
+      console.log('saveOrUpdateCredentials queueMessage.type:', queueMessage.type);
+      console.log('saveOrUpdateCredentials edit:', edit);
       if (
         queueMessage.tab.id !== tab.id ||
         (queueMessage.type !== NotificationQueueMessageType.AddLogin &&
@@ -565,7 +592,9 @@ export default class NotificationBackground {
       }
 
       folderId = (await this.folderExists(folderId)) ? folderId : null;
+      console.log('queueMessage:', queueMessage);
       const newCipher = this.convertAddLoginQueueMessageToCipherView(queueMessage, folderId);
+      console.log('newCipher:', newCipher);
 
       if (edit) {
         await this.editItem(newCipher, tab);
@@ -788,6 +817,7 @@ export default class NotificationBackground {
     message: AddLoginQueueMessage,
     folderId?: string,
   ): CipherView {
+    console.log('convertAddLoginQueueMessageToCipherView message:', message);
     const uriView = new LoginUriView();
     uriView.uri = message.uri;
 
