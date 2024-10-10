@@ -34,6 +34,7 @@ export enum FeatureFlag {
   VerifiedSsoDomainEndpoint = "pm-12337-refactor-sso-details-endpoint",
   PM11901_RefactorSelfHostingLicenseUploader = "PM-11901-refactor-self-hosting-license-uploader",
   Pm3478RefactorOrganizationUserApi = "pm-3478-refactor-organizationuser-api",
+  AllowLabsSettings = "allow-labs-settings",
   ClearAllLabsSettings = "clear-all-labs-settings",
   AccessIntelligence = "pm-13227-access-intelligence",
 }
@@ -80,6 +81,7 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.VerifiedSsoDomainEndpoint]: FALSE,
   [FeatureFlag.PM11901_RefactorSelfHostingLicenseUploader]: FALSE,
   [FeatureFlag.Pm3478RefactorOrganizationUserApi]: FALSE,
+  [FeatureFlag.AllowLabsSettings]: FALSE,
   [FeatureFlag.ClearAllLabsSettings]: FALSE,
   [FeatureFlag.AccessIntelligence]: FALSE,
 } satisfies Record<FeatureFlag, AllowedFeatureFlagTypes>;
