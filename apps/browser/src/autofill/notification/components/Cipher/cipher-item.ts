@@ -34,8 +34,9 @@ export function CipherItem({
 const cipherItemStyles = css`
   gap: ${spacing["2"]};
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
-  justify-content: space-between;
+  justify-content: start;
 
   > img,
   > svg {

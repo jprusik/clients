@@ -17,6 +17,7 @@ const config: StorybookConfig = {
     "../apps/web/src/**/*.stories.@(js|jsx|ts|tsx)",
     "../apps/browser/src/**/*.mdx",
     "../apps/browser/src/**/*.stories.@(js|jsx|ts|tsx)",
+    // "../apps/browser/src/autofill/notification/components**/*",
     "../bitwarden_license/bit-web/src/**/*.mdx",
     "../bitwarden_license/bit-web/src/**/*.stories.@(js|jsx|ts|tsx)",
     "../libs/tools/card/src/**/*.mdx",

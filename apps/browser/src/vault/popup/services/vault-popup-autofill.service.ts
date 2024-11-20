@@ -77,7 +77,7 @@ export class VaultPopupAutofillService {
       }
       return this.autofillService
         .collectPageDetailsFromTab$(tab)
-        .pipe(timeout({ first: 1500, with: () => of([]) }));
+        .pipe(timeout({ first: 8000, with: () => of([]) }));
     }),
     shareReplay({ refCount: false, bufferSize: 1 }),
   );

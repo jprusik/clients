@@ -23,19 +23,18 @@ export function ActionButton({
   };
 
   return html`
-    <button type="button" title=${buttonText} class=${buttonStyles({disabled, theme})} @click=${handleButtonClick}>
+    <button type="button" title=${buttonText} class=${actionButtonStyles({disabled, theme})} @click=${handleButtonClick}>
       ${buttonText}
     </button>
   `;
 }
 
-const buttonStyles = ({disabled, theme}: {disabled: boolean, theme: Theme}) => css`
+const actionButtonStyles = ({disabled, theme}: {disabled: boolean, theme: Theme}) => css`
   ${typography.body1}
 
   user-select: none;
   border-radius: ${border.radius.full};
   padding: ${spacing['1.5']} ${spacing['4']};
-  max-width: 50%;
   overflow: hidden;
   text-align: center;
   text-overflow: ellipsis;

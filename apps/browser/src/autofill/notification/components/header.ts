@@ -1,9 +1,10 @@
 import { css } from "@emotion/css";
+import { ContextConsumer } from "@lit/context";
 import { html } from "lit";
 
 import { Theme, ThemeTypes } from "@bitwarden/common/platform/enums";
 
-import { themes } from "../constants/styles";
+import { spacing, themes } from "../constants/styles";
 
 import { CloseButton } from "./Buttons/close-button";
 import { BrandIcon } from "./brand-icon";
@@ -18,6 +19,8 @@ export function NotificationHeader({
 }: {
   handleCloseNotification: (e: Event) => void;
   hasBody: boolean;
+  // const theme = new ContextConsumer(this, {context: themeContext, subscribe: true, callback: (ctx) => {console.log('context callback!')}} );
+  // console.log('theme:', theme);
   isVaultLocked: boolean;
   message: string;
   theme: Theme;
@@ -26,7 +29,7 @@ export function NotificationHeader({
   const isDismissable = true;
 
   return html`
-    <div class=${headerStyles({ hasBody, theme })}>
+    <div class=${notificationHeaderStyles({ hasBody, theme })}>
       ${showIcon ? BrandIcon({ isVaultLocked }) : null}
       ${NotificationHeaderMessage({ message, theme })}
       ${isDismissable ? CloseButton({ handleCloseNotification, theme }) : null}
@@ -34,7 +37,7 @@ export function NotificationHeader({
   `;
 }
 
-const headerStyles = ({ hasBody, theme }: { hasBody: boolean; theme: Theme }) => css`
+const notificationHeaderStyles = ({ hasBody, theme }: { hasBody: boolean; theme: Theme }) => css`
   gap: 8px;
   display: flex;
   align-items: center;

@@ -10,6 +10,7 @@ import { CipherData } from "../types";
 
 import { ButtonRow } from "./Buttons/button-row";
 import { CipherItem } from "./Cipher";
+import { ActionRow } from "./action-row";
 import { NotificationBody } from "./body";
 import { NotificationFooter } from "./footer";
 import { NotificationHeader } from "./header";
@@ -29,9 +30,28 @@ export function NotificationContainer({
 
   // @TODO mock cipher for development
   const cipher = createAutofillOverlayCipherDataMock(1) as CipherData;
+  // const cipher = {
+  //   id: "inline-menu-cipher-0",
+  //   name: "fedex.com/secure-login",
+  //   type: 1,
+  //   reprompt: 0,
+  //   favorite: false,
+  //   icon: {
+  //     imageEnabled: true,
+  //     image: "https://localhost:8443/icons/www.fedex.com/icon.png",
+  //     fallbackImage: "images/bwi-globe.png",
+  //     icon: "bwi-globe",
+  //   },
+  //   accountCreationFieldType: "text",
+  //   login: {
+  //     username: "bwplaywright@gmail.com",
+  //   },
+  // } as CipherData;
+  let actionType = 'newLogin';
+  const itemText = actionType === 'newLogin' ? 'Save as new login' : null;
 
   return html`
-    <div class=${containerStyles(theme)}>
+    <div class=${notificationContainerStyles(theme)}>
       ${NotificationHeader({
         handleCloseNotification,
         hasBody: showBody,
@@ -46,7 +66,7 @@ export function NotificationContainer({
             children: [
               // @TODO placeholder composition
               ItemRow({ theme, children: CipherItem({ cipher, notificationType: "add", theme }) }),
-              ItemRow({ theme, children: CipherItem({ cipher, notificationType: "add", theme }) }),
+              ActionRow({ itemText, handleAction: () => {window.alert('whoop, there it is!')}, theme }),
               ItemRow({ theme, children: CipherItem({ cipher, notificationType: "add", theme }) }),
             ],
           })
@@ -56,7 +76,7 @@ export function NotificationContainer({
   `;
 }
 
-const containerStyles = (theme: Theme) => css`
+const notificationContainerStyles = (theme: Theme) => css`
   position: absolute;
   right: 20px;
   border: 1px solid ${themes[theme].secondary["300"]};

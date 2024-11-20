@@ -23,13 +23,13 @@ export function BadgeButton({
   };
 
   return html`
-    <button type="button" title=${buttonText} class=${buttonStyles({disabled, theme})} @click=${handleButtonClick}>
+    <button type="button" title=${buttonText} class=${badgeButtonStyles({disabled, theme})} @click=${handleButtonClick}>
       ${buttonText}
     </button>
   `;
 }
 
-const buttonStyles = ({disabled, theme}: {disabled: boolean, theme: Theme}) => css`
+const badgeButtonStyles = ({disabled, theme}: {disabled: boolean, theme: Theme}) => css`
   ${typography.helperMedium}
 
   user-select: none;
