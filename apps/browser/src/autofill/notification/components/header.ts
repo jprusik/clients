@@ -1,11 +1,12 @@
 import { css } from "@emotion/css";
+import { ContextConsumer } from "@lit/context";
 import { html } from "lit";
 
 import { Theme, ThemeTypes } from "@bitwarden/common/platform/enums";
 
-import { themes } from "../constants/styles";
+import { spacing, themes } from "../constants/styles";
 
-import { CloseButton } from "./Buttons/close-button";
+import { CloseButton } from "./buttons/close-button";
 import { BrandIcon } from "./brand-icon";
 import { NotificationHeaderMessage } from "./header-message";
 
@@ -18,6 +19,8 @@ export function NotificationHeader({
 }: {
   handleCloseNotification: (e: Event) => void;
   hasBody: boolean;
+  // const theme = new ContextConsumer(this, {context: themeContext, subscribe: true, callback: (ctx) => {console.log('context callback!')}} );
+  // console.log('theme:', theme);
   isVaultLocked: boolean;
   message: string;
   theme: Theme;
