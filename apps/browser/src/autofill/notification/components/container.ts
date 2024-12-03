@@ -30,6 +30,23 @@ export function NotificationContainer({
 
   // @TODO remove mock cipher for development
   const cipher = createAutofillOverlayCipherDataMock(1) as CipherData;
+  // const cipher = {
+  //   id: "inline-menu-cipher-0",
+  //   name: "fedex.com/secure-login",
+  //   type: 1,
+  //   reprompt: 0,
+  //   favorite: false,
+  //   icon: {
+  //     imageEnabled: true,
+  //     image: "https://localhost:8443/icons/www.fedex.com/icon.png",
+  //     fallbackImage: "images/bwi-globe.png",
+  //     icon: "bwi-globe",
+  //   },
+  //   accountCreationFieldType: "text",
+  //   login: {
+  //     username: "bwplaywright@gmail.com",
+  //   },
+  // } as CipherData;
   const actionType = "newLogin";
   const itemText = actionType === "newLogin" ? "Save as new login" : null;
 
@@ -49,8 +66,8 @@ export function NotificationContainer({
             children: [
               // @TODO placeholder composition
               ItemRow({ theme, children: CipherItem({ cipher, notificationType: "add", theme }) }),
-              ActionRow({ itemText, handleAction: () => {}, theme }),
               ItemRow({ theme, children: CipherItem({ cipher, notificationType: "add", theme }) }),
+              ActionRow({ itemText, handleAction: () => {window.alert('whoop, there it is!')}, theme }),
             ],
           })
         : null}

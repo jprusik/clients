@@ -29,6 +29,9 @@ import {
 import { AutofillInlineMenuPageElement } from "../shared/autofill-inline-menu-page-element";
 
 export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
+  static get observedAttributes() {
+    return ['showTotp'];
+  }
   private inlineMenuListContainer: HTMLDivElement;
   private passwordGeneratorContainer: HTMLDivElement;
   private resizeObserver: ResizeObserver;
@@ -67,6 +70,10 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
     super();
 
     this.setupInlineMenuListGlobalListeners();
+  }
+
+  ngOnInit () {
+
   }
 
   /**
@@ -496,7 +503,7 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
     this.newItemButtonElement.textContent = this.getNewItemButtonText(showLogin);
     this.newItemButtonElement.setAttribute("aria-label", this.getNewItemAriaLabel(showLogin));
     this.newItemButtonElement.prepend(buildSvgDomElement(plusIcon));
-    this.newItemButtonElement.addEventListener(EVENTS.CLICK, this.handeNewItemButtonClick);
+    this.newItemButtonElement.addEventListener(EVENTS.CLICK, this.handleNewItemButtonClick);
 
     return this.buildButtonContainer(this.newItemButtonElement);
   }
@@ -556,7 +563,7 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
    * Handles the click event for the new item button.
    * Sends a message to the parent window to add a new vault item.
    */
-  private handeNewItemButtonClick = () => {
+  private handleNewItemButtonClick = () => {
     let addNewCipherType = this.inlineMenuFillType;
 
     if (this.showInlineMenuAccountCreation) {
@@ -755,6 +762,11 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
    * @param cipher - The cipher to build the list item for.
    */
   private buildInlineMenuListActionsItem(cipher: InlineMenuCipherData) {
+    // this.postMessageToParent({
+    //   command: "getFeatureFlag",
+    //   value: 'something',
+    // });
+
     this.buildPasskeysHeadingElements(cipher);
 
     const fillCipherElement = this.buildFillCipherElement(cipher);
@@ -768,6 +780,8 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
     inlineMenuListActionsItem.setAttribute("role", "listitem");
     inlineMenuListActionsItem.classList.add("inline-menu-list-actions-item");
     inlineMenuListActionsItem.appendChild(cipherContainerElement);
+
+    // If the cipher has a totp, build that UX; feature flag value should drive this
 
     if (this.showPasskeysLabels && cipher.login?.passkey) {
       this.lastPasskeysListItem = inlineMenuListActionsItem;
