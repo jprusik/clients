@@ -35,12 +35,12 @@ export function ActionButton({
 }
 
 const actionButtonStyles = ({ disabled, theme }: { disabled: boolean; theme: Theme }) => css`
-  ${typography.body1}
+  ${typography.body2}
 
   user-select: none;
   border: 1px solid transparent;
   border-radius: ${border.radius.full};
-  padding: ${spacing["1.5"]} ${spacing["4"]};
+  padding: ${spacing["1"]} ${spacing["4"]};
   overflow: hidden;
   text-align: center;
   text-overflow: ellipsis;
