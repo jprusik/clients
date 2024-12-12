@@ -197,6 +197,7 @@ export function createAutofillOverlayCipherDataMock(
     favorite: false,
     icon: {
       imageEnabled: true,
+      // fix/improve test/placeholder images
       image: "https://jest-testing-website.com/image.png",
       fallbackImage: "https://jest-testing-website.com/fallback.png",
       icon: "bw-icon",
