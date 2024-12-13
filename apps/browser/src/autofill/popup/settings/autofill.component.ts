@@ -47,7 +47,6 @@ import {
 
 import { BrowserApi } from "../../../platform/browser/browser-api";
 import { PopOutComponent } from "../../../platform/popup/components/pop-out.component";
-import { PopupFooterComponent } from "../../../platform/popup/layout/popup-footer.component";
 import { PopupHeaderComponent } from "../../../platform/popup/layout/popup-header.component";
 import { PopupPageComponent } from "../../../platform/popup/layout/popup-page.component";
 
@@ -65,7 +64,6 @@ import { PopupPageComponent } from "../../../platform/popup/layout/popup-page.co
     JslibModule,
     LinkModule,
     PopOutComponent,
-    PopupFooterComponent,
     PopupHeaderComponent,
     PopupPageComponent,
     RouterModule,
@@ -85,6 +83,7 @@ export class AutofillComponent implements OnInit {
   protected inlineMenuVisibility: InlineMenuVisibilitySetting =
     AutofillOverlayVisibility.OnFieldFocus;
   protected inlineMenuPositioningImprovementsEnabled: boolean = false;
+  protected blockBrowserInjectionsByDomainEnabled: boolean = false;
   protected browserClientVendor: BrowserClientVendor = BrowserClientVendors.Unknown;
   protected disablePasswordManagerURI: DisablePasswordManagerUri =
     DisablePasswordManagerUris.Unknown;
@@ -159,6 +158,10 @@ export class AutofillComponent implements OnInit {
 
     this.inlineMenuPositioningImprovementsEnabled = await this.configService.getFeatureFlag(
       FeatureFlag.InlineMenuPositioningImprovements,
+    );
+
+    this.blockBrowserInjectionsByDomainEnabled = await this.configService.getFeatureFlag(
+      FeatureFlag.BlockBrowserInjectionsByDomain,
     );
 
     this.showInlineMenuIdentities =

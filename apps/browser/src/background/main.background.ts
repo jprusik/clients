@@ -690,7 +690,10 @@ export default class MainBackground {
       this.vaultTimeoutSettingsService,
     );
 
-    this.domainSettingsService = new DefaultDomainSettingsService(this.stateProvider);
+    this.domainSettingsService = new DefaultDomainSettingsService(
+      this.stateProvider,
+      this.configService,
+    );
     this.fileUploadService = new FileUploadService(this.logService);
     this.cipherFileUploadService = new CipherFileUploadService(
       this.apiService,

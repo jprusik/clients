@@ -34,6 +34,7 @@ export class AutofillV1Component implements OnInit {
   protected autoFillOverlayVisibilityOptions: any[];
   protected disablePasswordManagerLink: string;
   protected inlineMenuPositioningImprovementsEnabled: boolean = false;
+  protected blockBrowserInjectionsByDomainEnabled: boolean = false;
   protected showInlineMenuIdentities: boolean = true;
   protected showInlineMenuCards: boolean = true;
   inlineMenuIsEnabled: boolean = false;
@@ -116,6 +117,10 @@ export class AutofillV1Component implements OnInit {
 
     this.inlineMenuPositioningImprovementsEnabled = await this.configService.getFeatureFlag(
       FeatureFlag.InlineMenuPositioningImprovements,
+    );
+
+    this.blockBrowserInjectionsByDomainEnabled = await this.configService.getFeatureFlag(
+      FeatureFlag.BlockBrowserInjectionsByDomain,
     );
 
     this.inlineMenuIsEnabled = this.isInlineMenuEnabled();
