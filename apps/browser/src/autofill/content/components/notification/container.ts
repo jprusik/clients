@@ -1,12 +1,10 @@
-import { css } from "@emotion/css";
+import { css, cache } from "@emotion/css";
 import { html } from "lit";
 
 import { Theme } from "@bitwarden/common/platform/enums";
 
-import {
-  NotificationBarIframeInitData,
-  NotificationTypes,
-} from "../../../notification/abstractions/notification-bar";
+import { NotificationBarIframeInitData, NotificationTypes } from "../../../notification/abstractions/notification-bar";
+import { define } from "../utils/define";
 import { createAutofillOverlayCipherDataMock } from "../../../spec/autofill-mocks";
 import { CipherItem } from "../cipher";
 import { CipherData } from "../cipher/types";
@@ -18,6 +16,10 @@ import { ItemRow } from "../rows/item-row";
 import { NotificationBody } from "./body";
 import { NotificationFooter } from "./footer";
 import { NotificationHeader } from "./header";
+
+// import { NotificationHeader } from "./header";
+
+// import "./header";
 
 export function NotificationContainer({
   handleCloseNotification,
@@ -31,8 +33,25 @@ export function NotificationContainer({
   const headerMessage = getHeaderMessage(type, i18n);
   const showBody = true;
 
+  const cipher = {
+    id: "inline-menu-cipher-0",
+    name: "fedex.com/secure-login",
+    type: 1,
+    reprompt: 0,
+    favorite: false,
+    icon: {
+      imageEnabled: true,
+      image: "https://localhost:8443/icons/www.fedex.com/icon.png",
+      icon: "bwi-globe",
+    },
+    accountCreationFieldType: "text",
+    login: {
+      username: "bwplaywright@gmail.com",
+    },
+  } as CipherData;
   // @TODO remove mock ciphers for development
   const ciphers = [
+    cipher,
     createAutofillOverlayCipherDataMock(1),
     { ...createAutofillOverlayCipherDataMock(2), icon: { imageEnabled: false } },
     {
@@ -42,15 +61,21 @@ export function NotificationContainer({
   ] as CipherData[];
   const itemText = type === NotificationTypes.Add ? "Save as new login" : null;
 
+      // ${NotificationHeader({
+      //   handleCloseNotification,
+      //   standalone: showBody,
+      //   isVaultLocked,
+      //   message: headerMessage,
+      //   theme,
+      // })}
   return html`
     <div class=${notificationContainerStyles(theme)}>
-      ${NotificationHeader({
-        handleCloseNotification,
-        standalone: showBody,
-        isVaultLocked,
-        message: headerMessage,
-        theme,
-      })}
+      <notification-header
+        .handleCloseNotification="${handleCloseNotification}"
+        hasBody="${showBody}"
+        isVaultLocked="${isVaultLocked}"
+        message="${headerMessage}"
+      ></notification-header>
       ${showBody
         ? NotificationBody({
             theme,
@@ -63,7 +88,9 @@ export function NotificationContainer({
                   cipher,
                   notificationType: type,
                   theme,
-                  handleAction: () => {},
+                  handleAction: () => {
+                    window.alert("cipher item button pressed!");
+                  },
                 }),
               }),
             ),
@@ -117,3 +144,5 @@ function getHeaderMessage(type: string, i18n: { [key: string]: string }) {
       return null;
   }
 }
+
+define('notification-container', NotificationContainer);
