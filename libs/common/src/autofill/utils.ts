@@ -353,13 +353,7 @@ export function isUrlInList(url: string = "", urlList: NeverDomains = {}): boole
     }
 
     if (tabHostname) {
-      const tabIsBlocked = urlListKeys.some((blockedHostname) =>
-        tabHostname.endsWith(blockedHostname),
-      );
-
-      if (tabIsBlocked) {
-        return true;
-      }
+      return urlListKeys.some((blockedHostname) => tabHostname.endsWith(blockedHostname));
     }
   }
 

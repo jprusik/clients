@@ -13,6 +13,7 @@ import {
   Subject,
   switchMap,
 } from "rxjs";
+import { getHostname } from "tldts";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { DomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
@@ -84,13 +85,14 @@ export class VaultPopupAutofillService {
   showCurrentTabIsBlockedBanner$: Observable<boolean> = combineLatest([
     this.domainSettingsService.blockedInteractionsUris$,
     this.currentAutofillTab$,
-    this.currentTabIsOnBlocklist$,
   ]).pipe(
-    map(([blockedInteractionsUrls, currentTab, tabIsBlocked]) => {
+    map(([blockedInteractionsUrls, currentTab]) => {
       if (blockedInteractionsUrls && currentTab?.url?.length) {
-        const tabURL = new URL(currentTab.url);
+        const tabHostname = getHostname(currentTab.url, { allowPrivateDomains: true });
+        const tabIsBlocked = isUrlInList(currentTab.url, blockedInteractionsUrls);
+
         const showScriptInjectionIsBlockedBanner =
-          tabIsBlocked && !blockedInteractionsUrls[tabURL.hostname]?.bannerIsDismissed;
+          tabIsBlocked && !blockedInteractionsUrls[tabHostname]?.bannerIsDismissed;
 
         return showScriptInjectionIsBlockedBanner;
       }
