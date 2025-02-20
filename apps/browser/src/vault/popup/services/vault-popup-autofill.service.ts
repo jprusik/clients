@@ -146,10 +146,16 @@ export class VaultPopupAutofillService {
         return of([]);
       }
 
-      return this.currentTabIsOnBlocklist$.pipe(
-        switchMap((isBlocked) => {
-          if (isBlocked) {
-            return of([]);
+      return this.domainSettingsService.blockedInteractionsUris$.pipe(
+        switchMap((blockedURIs) => {
+          // This blocked URI logic will be updated to use the common util in PM-18219
+          if (blockedURIs && tab?.url?.length) {
+            const tabURL = new URL(tab.url);
+            const tabIsBlocked = Object.keys(blockedURIs).includes(tabURL.hostname);
+
+            if (tabIsBlocked) {
+              return of([]);
+            }
           }
 
           return this.autofillService.collectPageDetailsFromTab$(tab);
