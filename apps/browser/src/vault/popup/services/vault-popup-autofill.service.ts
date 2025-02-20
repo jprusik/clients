@@ -145,7 +145,16 @@ export class VaultPopupAutofillService {
       if (!tab) {
         return of([]);
       }
-      return this.autofillService.collectPageDetailsFromTab$(tab);
+
+      return this.currentTabIsOnBlocklist$.pipe(
+        switchMap((isBlocked) => {
+          if (isBlocked) {
+            return of([]);
+          }
+
+          return this.autofillService.collectPageDetailsFromTab$(tab);
+        }),
+      );
     }),
     shareReplay({ refCount: false, bufferSize: 1 }),
   );
