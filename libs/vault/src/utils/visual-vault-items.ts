@@ -1,4 +1,4 @@
-let QRious = require("qrious");
+import QRCode from "qrcode";
 
 /*
     Wifi View Example
@@ -18,16 +18,12 @@ let QRious = require("qrious");
 
 /**
  * Create a wifi QR code.
- * 
+ *
  * @param ssid - The wifi ssid
  * @param password - The wifi password
  */
-export function generateWifiQRCode(ssid: string, password: string): string {
-    let dataURL = `WIFI:S:${ssid};T:<WPA|WEP|>;P:${password};;`;
+export async function generateWifiQRCode(ssid: string, password: string): Promise<string> {
+  const dataURL = `WIFI:S:${ssid};T:<WPA|WEP|>;P:${password};;`;
 
-    var qr = new QRious({
-        value: dataURL,
-    });
-
-    return qr.toDataURL('image/jpeg');
+  return await QRCode.toDataURL(dataURL);
 }
