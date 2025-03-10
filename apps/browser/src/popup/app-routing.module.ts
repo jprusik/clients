@@ -90,6 +90,7 @@ import { AttachmentsV2Component } from "../vault/popup/components/vault-v2/attac
 import { PasswordHistoryV2Component } from "../vault/popup/components/vault-v2/vault-password-history-v2/vault-password-history-v2.component";
 import { VaultV2Component } from "../vault/popup/components/vault-v2/vault-v2.component";
 import { ViewV2Component } from "../vault/popup/components/vault-v2/view-v2/view-v2.component";
+import { VisualizeVaultItem } from "../vault/popup/components/visualize-vault-item/visualize-vault-item.component";
 import { AppearanceV2Component } from "../vault/popup/settings/appearance-v2.component";
 import { FoldersV2Component } from "../vault/popup/settings/folders-v2.component";
 import { TrashComponent } from "../vault/popup/settings/trash.component";
@@ -236,6 +237,7 @@ const routes: Routes = [
     path: "view-cipher",
     component: ViewV2Component,
     canActivate: [authGuard],
+    children: [{ path: "/visualize", component: VisualizeVaultItem }],
     data: {
       // Above "trash"
       elevation: 3,
