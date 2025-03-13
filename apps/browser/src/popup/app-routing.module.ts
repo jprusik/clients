@@ -87,10 +87,10 @@ import { AtRiskPasswordsComponent } from "../vault/popup/components/at-risk-pass
 import { AddEditV2Component } from "../vault/popup/components/vault-v2/add-edit/add-edit-v2.component";
 import { AssignCollections } from "../vault/popup/components/vault-v2/assign-collections/assign-collections.component";
 import { AttachmentsV2Component } from "../vault/popup/components/vault-v2/attachments/attachments-v2.component";
+import { VaultItemVisualizerComponent } from "../vault/popup/components/vault-v2/vault-item-visualizer/vault-item-visualizer.component";
 import { PasswordHistoryV2Component } from "../vault/popup/components/vault-v2/vault-password-history-v2/vault-password-history-v2.component";
 import { VaultV2Component } from "../vault/popup/components/vault-v2/vault-v2.component";
 import { ViewV2Component } from "../vault/popup/components/vault-v2/view-v2/view-v2.component";
-import { VisualizeVaultItem } from "../vault/popup/components/visualize-vault-item/visualize-vault-item.component";
 import { AppearanceV2Component } from "../vault/popup/settings/appearance-v2.component";
 import { FoldersV2Component } from "../vault/popup/settings/folders-v2.component";
 import { TrashComponent } from "../vault/popup/settings/trash.component";
@@ -237,7 +237,7 @@ const routes: Routes = [
     path: "view-cipher",
     component: ViewV2Component,
     canActivate: [authGuard],
-    children: [{ path: "/visualize", component: VisualizeVaultItem }],
+    children: [{ path: "visualize", component: VaultItemVisualizerComponent }],
     data: {
       // Above "trash"
       elevation: 3,
@@ -731,7 +731,7 @@ export class NoRouteReuseStrategy implements RouteReuseStrategy {
     RouterModule.forRoot(routes, {
       useHash: true,
       onSameUrlNavigation: "reload",
-      /*enableTracing: true,*/
+      enableTracing: true,
     }),
   ],
   exports: [RouterModule],

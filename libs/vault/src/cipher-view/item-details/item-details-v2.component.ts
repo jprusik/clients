@@ -2,6 +2,7 @@
 // @ts-strict-ignore
 import { CommonModule } from "@angular/common";
 import { Component, Input } from "@angular/core";
+import { RouterModule } from "@angular/router";
 
 import { CollectionView } from "@bitwarden/admin-console/common";
 import { JslibModule } from "@bitwarden/angular/jslib.module";
@@ -23,6 +24,7 @@ import { OrgIconDirective } from "../../components/org-icon.directive";
   templateUrl: "item-details-v2.component.html",
   standalone: true,
   imports: [
+    RouterModule,
     CommonModule,
     JslibModule,
     CardComponent,
