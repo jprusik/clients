@@ -53,7 +53,6 @@
     "src",
     "../../libs/common/src/autofill/constants",
     "../../libs/common/custom-matchers.d.ts",
-    "../../libs/common/src/key-management/crypto/services/encrypt.worker.ts",
-    "../../libs/vault/src/cipher-view/visualize-vault-item"
+    "../../libs/common/src/key-management/crypto/services/encrypt.worker.ts"
   ]
 }

@@ -6,14 +6,14 @@ import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { ButtonModule, DialogModule, TypographyModule } from "@bitwarden/components";
 
-import { VisualizeVaultItem } from "../visualize-vault-item/visualize-vault-item.component";
+import { VaultItemVisualizerComponent } from "./vault-item-visualizer.component";
 
 type VisualizeVaultItemDialogParams = {
   cipher: CipherView;
 };
 
 @Component({
-  selector: "app-visualize-vault-item-dialog",
+  selector: "vault-item-visualizer-dialog",
   standalone: true,
   imports: [
     CommonModule,
@@ -21,10 +21,10 @@ type VisualizeVaultItemDialogParams = {
     DialogModule,
     ButtonModule,
     TypographyModule,
-    VisualizeVaultItem,
+    VaultItemVisualizerComponent,
   ],
-  templateUrl: "./visualize-vault-item-dialog.component.html",
+  templateUrl: "./vault-item-visualizer-dialog.component.html",
 })
-export class VisualizeVaultItemDialog {
+export class VaultItemVisualizerDialogComponent {
   constructor(@Inject(DIALOG_DATA) protected data: VisualizeVaultItemDialogParams) {}
 }

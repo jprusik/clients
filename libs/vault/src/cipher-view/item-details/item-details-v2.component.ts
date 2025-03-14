@@ -21,7 +21,7 @@ import {
 } from "@bitwarden/components";
 
 import { OrgIconDirective } from "../../components/org-icon.directive";
-import { VisualizeVaultItemDialog } from "../visualize-vault-item/visualize-vault-item-dialog.component";
+import { VaultItemVisualizerDialogComponent } from "../vault-item-visualizer/vault-item-visualizer-dialog.component";
 
 @Component({
   selector: "app-item-details-v2",
@@ -39,7 +39,7 @@ import { VisualizeVaultItemDialog } from "../visualize-vault-item/visualize-vaul
     OrgIconDirective,
     FormFieldModule,
     IconButtonModule,
-    VisualizeVaultItemDialog,
+    VaultItemVisualizerDialogComponent,
   ],
 })
 export class ItemDetailsV2Component {
@@ -56,7 +56,7 @@ export class ItemDetailsV2Component {
   }
 
   async showVisualization() {
-    return await this.dialogService.open(VisualizeVaultItemDialog, {
+    return await this.dialogService.open(VaultItemVisualizerDialogComponent, {
       data: { cipher: this.cipher },
     });
   }
