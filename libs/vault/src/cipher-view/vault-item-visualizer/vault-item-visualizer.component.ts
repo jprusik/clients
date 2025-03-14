@@ -1,10 +1,11 @@
 import { CommonModule } from "@angular/common";
-import { Component, effect, OnInit, signal, WritableSignal } from "@angular/core";
+import { Component, effect, Input, OnInit, signal, WritableSignal } from "@angular/core";
 import { toSignal } from "@angular/core/rxjs-interop";
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
 
 import { QRCodeOption } from "@bitwarden/common/platform/enums";
+import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import {
   TypographyModule,
   ButtonModule,
@@ -17,9 +18,6 @@ import {
 } from "@bitwarden/components";
 import { generateWiFiQRCode } from "@bitwarden/vault";
 
-import { PopupHeaderComponent } from "../../../../../platform/popup/layout/popup-header.component";
-import { PopupPageComponent } from "../../../../../platform/popup/layout/popup-page.component";
-
 @Component({
   imports: [
     CommonModule,
@@ -30,18 +28,19 @@ import { PopupPageComponent } from "../../../../../platform/popup/layout/popup-p
     SectionComponent,
     SectionHeaderComponent,
     CardComponent,
-    PopupPageComponent,
-    PopupHeaderComponent,
     FormsModule,
     FormFieldModule,
     SelectModule,
   ],
+  selector: "vault-item-visualizer",
   standalone: true,
   templateUrl: "./vault-item-visualizer.component.html",
 })
 export class VaultItemVisualizerComponent implements OnInit {
   // TODO strings + translations
   // headerText: string;
+
+  @Input() cipher?: CipherView;
 
   qrCodeOptions: { name: string; value: QRCodeOption }[];
 

@@ -87,7 +87,6 @@ import { AtRiskPasswordsComponent } from "../vault/popup/components/at-risk-pass
 import { AddEditV2Component } from "../vault/popup/components/vault-v2/add-edit/add-edit-v2.component";
 import { AssignCollections } from "../vault/popup/components/vault-v2/assign-collections/assign-collections.component";
 import { AttachmentsV2Component } from "../vault/popup/components/vault-v2/attachments/attachments-v2.component";
-import { VaultItemVisualizerComponent } from "../vault/popup/components/vault-v2/vault-item-visualizer/vault-item-visualizer.component";
 import { PasswordHistoryV2Component } from "../vault/popup/components/vault-v2/vault-password-history-v2/vault-password-history-v2.component";
 import { VaultV2Component } from "../vault/popup/components/vault-v2/vault-v2.component";
 import { ViewV2Component } from "../vault/popup/components/vault-v2/view-v2/view-v2.component";
@@ -237,16 +236,10 @@ const routes: Routes = [
     path: "view-cipher",
     component: ViewV2Component,
     canActivate: [authGuard],
-    // TODO satisfy lifecycles of parent component if visualize is child
     data: {
       // Above "trash"
       elevation: 3,
     } satisfies RouteDataProperties,
-  },
-  {
-    path: "view-cipher/visualize",
-    component: VaultItemVisualizerComponent,
-    canActivate: [authGuard],
   },
   {
     path: "cipher-password-history",
