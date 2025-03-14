@@ -22,8 +22,8 @@ import QRCode from "qrcode";
  * @param ssid - The wifi ssid
  * @param password - The wifi password
  */
-export async function generateWifiQRCode(ssid: string, password: string): Promise<string> {
-  const dataURL = `WIFI:S:${ssid};T:<WPA|WEP|>;P:${password};;`;
+export async function generateWiFiQRCode(ssid: string, password: string): Promise<string> {
+  const accessEncoding = `WIFI:S:${ssid};T:<WPA|WEP|>;P:${password};;`;
 
-  return await QRCode.toDataURL(dataURL);
+  return await QRCode.toString(accessEncoding, { type: "svg" });
 }
