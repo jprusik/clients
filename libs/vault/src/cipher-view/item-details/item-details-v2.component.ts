@@ -11,13 +11,17 @@ import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { FolderView } from "@bitwarden/common/vault/models/view/folder.view";
 import {
   CardComponent,
+  DialogModule,
+  DialogService,
   FormFieldModule,
+  IconButtonModule,
   SectionComponent,
   SectionHeaderComponent,
   TypographyModule,
 } from "@bitwarden/components";
 
 import { OrgIconDirective } from "../../components/org-icon.directive";
+import { VisualizeVaultItemDialog } from "../visualize-vault-item/visualize-vault-item-dialog.component";
 
 @Component({
   selector: "app-item-details-v2",
@@ -26,6 +30,7 @@ import { OrgIconDirective } from "../../components/org-icon.directive";
   imports: [
     RouterModule,
     CommonModule,
+    DialogModule,
     JslibModule,
     CardComponent,
     SectionComponent,
@@ -33,6 +38,8 @@ import { OrgIconDirective } from "../../components/org-icon.directive";
     TypographyModule,
     OrgIconDirective,
     FormFieldModule,
+    IconButtonModule,
+    VisualizeVaultItemDialog,
   ],
 })
 export class ItemDetailsV2Component {
@@ -42,7 +49,13 @@ export class ItemDetailsV2Component {
   @Input() folder?: FolderView;
   @Input() hideOwner?: boolean = false;
 
+  constructor(private dialogService: DialogService) {}
+
   get showOwnership() {
     return this.cipher.organizationId && this.organization && !this.hideOwner;
+  }
+
+  async showVisualization() {
+    return await this.dialogService.open(VisualizeVaultItemDialog, {});
   }
 }
