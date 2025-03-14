@@ -56,6 +56,8 @@ export class ItemDetailsV2Component {
   }
 
   async showVisualization() {
-    return await this.dialogService.open(VisualizeVaultItemDialog, {});
+    return await this.dialogService.open(VisualizeVaultItemDialog, {
+      data: { cipher: this.cipher },
+    });
   }
 }

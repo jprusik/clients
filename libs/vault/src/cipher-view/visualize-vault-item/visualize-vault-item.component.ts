@@ -1,4 +1,6 @@
-import { Component } from "@angular/core";
+import { Component, Input } from "@angular/core";
+
+import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 
 @Component({
   selector: "app-visualize-vault-item",
@@ -6,4 +8,6 @@ import { Component } from "@angular/core";
   imports: [],
   templateUrl: "./visualize-vault-item.component.html",
 })
-export class VisualizeVaultItem {}
+export class VisualizeVaultItem {
+  @Input() cipher?: CipherView;
+}
