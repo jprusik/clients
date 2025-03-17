@@ -16,7 +16,7 @@ import {
   FormFieldModule,
   SelectModule,
 } from "@bitwarden/components";
-import { generateWiFiQRCode } from "@bitwarden/vault";
+import { generateQRCodePath } from "@bitwarden/vault";
 
 @Component({
   imports: [
@@ -66,7 +66,10 @@ export class VaultItemVisualizerComponent implements OnInit {
       /* Retriggers whenever form changes */
       const values = this.dataToShareValues();
       if (typeof values !== "undefined" && values.qrCodeType !== null) {
-        const wiFiQRCode = await generateWiFiQRCode(values.fieldWithPassword, values.fieldWithSSID);
+        const wiFiQRCode = await generateQRCodePath("wifi", {
+          ssid: values.fieldWithPassword,
+          password: values.fieldWithSSID,
+        });
         this.wiFiQRCode.set(wiFiQRCode);
       }
     });
