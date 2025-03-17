@@ -230,6 +230,7 @@ export class LoginDetailsSectionComponent implements OnInit {
    * TODO: Browser extension needs a means to cache the current form so values are not lost upon navigating to the generator.
    */
   generatePassword = async () => {
+    window.alert("boop! got your nose!");
     const newPassword = await this.generationService.generatePassword();
 
     if (newPassword) {

@@ -77,6 +77,7 @@ export class VaultItemVisualizerComponent implements OnInit {
   }
 
   async ngOnInit() {
+    console.log('cipher:', this.cipher);
     /* Set default QR Code Type and field options after inference (TODO) */
     this.dataToShareForm.setValue({
       qrCodeType: "wifi",

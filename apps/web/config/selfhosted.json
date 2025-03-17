@@ -1,10 +1,13 @@
 {
   "dev": {
-    "proxyApi": "http://localhost:4001",
-    "proxyIdentity": "http://localhost:33657",
-    "proxyEvents": "http://localhost:46274",
-    "proxyNotifications": "http://localhost:61841",
+    "proxyApi": "https://localhost:8443/api",
+    "proxyIdentity": "https://localhost:8443/identity",
+    "proxyNotifications": "https://localhost:8443/notifications",
     "port": 8081
   },
-  "flags": {}
+  "flags": {
+    "managedEnvironment": {
+      "base": "https://localhost:8443"
+    }
+  }
 }

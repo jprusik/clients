@@ -10,7 +10,6 @@
   </bit-section-header>
   <bit-card>
     <form [formGroup]="dataToShareForm">
-      Cipher name is: {{ this.cipher?.name || "unknown" }}
       <bit-form-field>
         <bit-label>QR Code Type</bit-label>
         <bit-select formControlName="qrCodeType" id="qrCodeType">
