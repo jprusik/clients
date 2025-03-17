@@ -35,22 +35,21 @@ export function inferQRTypeValuesByCipher(cipher: CipherView): { type: QROptions
   return { type: "data", fields: {} };
 }
 
-export function encodeCipherForQRType(
-  type: QROptions,
-  mapping: object,
-  cipher: CipherView,
-): string {
+export function encodeCipherForQRType(type: QROptions, mapping: any, cipher: CipherView): string {
+  let encodable: string;
   switch (type) {
     case "wifi":
+      encodable = `WIFI:S:${mapping.ssid};T:<WPA|WEP|>;P:${mapping.password};;`;
       break;
     case "url":
       break;
     case "data":
     default:
+      encodable = mapping.data;
       break;
   }
 
-  return "";
+  return encodable;
 }
 
 /**
@@ -61,7 +60,7 @@ export function encodeCipherForQRType(
  */
 export async function generateQRCodePath(
   type: QROptions,
-  mapping: object,
+  mapping: any,
   cipher: CipherView,
 ): Promise<string> {
   const encodable = encodeCipherForQRType(type, mapping, cipher);
@@ -74,5 +73,5 @@ export async function generateQRCodePath(
     firstChild: { lastChild: path },
   } = doc;
 
-  return path.attributes.d;
+  return path.attributes.d.value;
 }

@@ -52,7 +52,7 @@ export class VaultItemVisualizerComponent implements OnInit {
 
   dataToShareValues = toSignal(this.dataToShareForm.valueChanges);
 
-  private wiFiQRCode: WritableSignal<string> = signal("");
+  qrCodePath: WritableSignal<string> = signal("");
 
   constructor(private sanitizer: DomSanitizer) {
     /* Set initial QR Code options */
@@ -66,17 +66,21 @@ export class VaultItemVisualizerComponent implements OnInit {
       /* Retriggers whenever form changes */
       const values = this.dataToShareValues();
       if (typeof values !== "undefined" && values.qrCodeType !== null) {
-        const wiFiQRCode = await generateQRCodePath("wifi", {
-          ssid: values.fieldWithPassword,
-          password: values.fieldWithSSID,
-        });
-        this.wiFiQRCode.set(wiFiQRCode);
+        const qrCodePath = await generateQRCodePath(
+          "wifi",
+          {
+            ssid: values.fieldWithPassword,
+            password: values.fieldWithSSID,
+          },
+          this.cipher,
+        );
+        this.qrCodePath.set(qrCodePath);
       }
     });
   }
 
   sanitizeSVG(): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(this.wiFiQRCode());
+    return this.sanitizer.bypassSecurityTrustHtml(this.qrCodePath());
   }
 
   async ngOnInit() {
