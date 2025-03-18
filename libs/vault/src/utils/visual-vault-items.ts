@@ -21,9 +21,10 @@ import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 
 type QROptions = "wifi" | "data" | "url";
 
-export function inferQRTypeValuesByCipher(cipher: CipherView): { type: QROptions; fields: object } {
+export function inferQRTypeValuesByCipher(cipher: CipherView): { type: QROptions } {
   switch (cipher.type) {
     case CipherType.Login:
+      return { type: "wifi" };
     case CipherType.SecureNote:
     case CipherType.Card:
     case CipherType.Identity:
@@ -32,11 +33,11 @@ export function inferQRTypeValuesByCipher(cipher: CipherView): { type: QROptions
       break;
   }
 
-  return { type: "data", fields: {} };
+  return { type: "data" };
 }
 
 export function encodeCipherForQRType(type: QROptions, mapping: any, cipher: CipherView): string {
-  let encodable: string;
+  let encodable: string = "";
   switch (type) {
     case "wifi":
       encodable = `WIFI:S:${mapping.ssid};T:<WPA|WEP|>;P:${mapping.password};;`;
