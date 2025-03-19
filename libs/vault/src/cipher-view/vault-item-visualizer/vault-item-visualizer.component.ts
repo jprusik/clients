@@ -8,7 +8,6 @@ import {
   FormsModule,
   ReactiveFormsModule,
 } from "@angular/forms";
-import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
 
 import { QRCodeOption } from "@bitwarden/common/platform/enums";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
@@ -250,10 +249,7 @@ export class VaultItemVisualizerComponent implements OnInit {
     return this.fieldMappingsControlMeta[this.qrCodeType].controls;
   }
 
-  constructor(
-    private fb: FormBuilder,
-    private sanitizer: DomSanitizer,
-  ) {
+  constructor(private fb: FormBuilder) {
     /* Set initial QR Code options */
     this.qrCodeOptions = [
       { name: "Wi-Fi", value: "wifi" },
@@ -270,7 +266,7 @@ export class VaultItemVisualizerComponent implements OnInit {
       /* Retriggers whenever form changes */
       const values = this.dataToShareValues();
       if (typeof values !== "undefined" && values.qrCodeType !== null) {
-        /* TODO pass the fieldMappings select values with cipher data, let bkgd fn handle? */
+        /* @TODO pass the fieldMappings select values with cipher data, let bkgd fn handle? */
         const qrCodePath = await generateQRCodePath(
           "wifi",
           {
@@ -286,9 +282,9 @@ export class VaultItemVisualizerComponent implements OnInit {
     this.visualizeForm.controls.qrCodeType.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
       const controlNames = this.fieldMappingsControls.map(({ name }) => name);
       for (const controlName of controlNames) {
-        if (controlName === "qrCodeType") {
-          continue;
-        }
+        // if (controlName === "qrCodeType") {
+        //   continue;
+        // }
         this.visualizeForm.controls.fieldMappings.removeControl(controlName);
       }
 
@@ -300,11 +296,8 @@ export class VaultItemVisualizerComponent implements OnInit {
     const fields = this.fieldMappingsControls;
     for (const { name, value } of fields) {
       this.visualizeForm.controls.fieldMappings.addControl(name, this.fb.control(value));
+      // @TODO handle cipher fields and defaults
     }
-  }
-
-  sanitizeSVG(): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(this.qrCodePath());
   }
 
   async ngOnInit() {
