@@ -1,3 +1,4 @@
+// @TODO Refactor
 export const QRCodeOptions = {
   WiFi: "wifi",
   Contact: "contact",

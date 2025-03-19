@@ -28,7 +28,7 @@ type FieldMappingControl = {
   label: string;
   name: string;
   value: string;
-  options: Array<{ name: string; value: string }>;
+  options: Array<{ label: string; name: string; value: string }>;
 };
 @Component({
   imports: [
@@ -54,7 +54,7 @@ export class VaultItemVisualizerComponent implements OnInit {
 
   @Input() cipher?: CipherView;
 
-  qrCodeOptions: { name: string; value: QRCodeOption }[];
+  qrCodeOptions: { name: string; value: string }[];
 
   visualizeForm = new FormGroup({
     qrCodeType: new FormControl<QRCodeOption>(null),
@@ -63,38 +63,175 @@ export class VaultItemVisualizerComponent implements OnInit {
   });
 
   fieldMappingsControlMeta: {
-    [key: string]: Array<FieldMappingControl>;
+    [key: string]: { label: string; controls: Array<FieldMappingControl> };
   } = {
-    wifi: [
-      {
-        label: "Field for SSID",
-        name: "ssid",
-        value: "",
-        options: [{ name: "Test", value: "testvalue" }],
-      },
-      {
-        label: "Field for Password",
-        name: "password",
-        value: "",
-        options: [{ name: "Test", value: "testvalue" }],
-      },
-    ],
-    contact: [
-      {
-        label: "Field for Contact",
-        name: "contact",
-        value: "",
-        options: [{ name: "Test", value: "testvalue" }],
-      },
-    ],
-    url: [
-      {
-        label: "Field for URL",
-        name: "url",
-        value: "",
-        options: [{ name: "Test", value: "testvalue" }],
-      },
-    ],
+    wifi: {
+      label: "Wi-Fi",
+      controls: [
+        {
+          label: "SSID",
+          name: "ssid",
+          value: "",
+          options: [
+            { label: "Username", name: "ssid.username", value: "username" },
+            { label: "Custom: SSID", name: "ssid.custom", value: "custom" },
+          ],
+        },
+        {
+          label: "Password",
+          name: "password",
+          value: "",
+          options: [{ label: "Password", name: "password.match", value: "match" }],
+        },
+        {
+          label: "Additional Options",
+          name: "additional",
+          value: "",
+          options: [{ label: "Custom: Wi-Fi Options", name: "additional.match", value: "match" }],
+        },
+      ],
+    },
+    url: {
+      label: "URL",
+      controls: [
+        {
+          label: "Link",
+          name: "link",
+          value: "",
+          options: [{ label: "Notes", name: "link.notes", value: "notes" }],
+        },
+      ],
+    },
+    plaintext: {
+      label: "Plain Text",
+      controls: [
+        {
+          label: "Content",
+          name: "content",
+          value: "",
+          options: [{ label: "Notes", name: "plaintext.notes", value: "notes" }],
+        },
+      ],
+    },
+    email: {
+      label: "Email",
+      controls: [
+        {
+          label: "Email",
+          name: "email",
+          value: "",
+          options: [
+            { label: "Username", name: "email.username", value: "username" },
+            { label: "Email", name: "email.match", value: "match" },
+          ],
+        },
+      ],
+    },
+    phone: {
+      label: "Phone",
+      controls: [
+        {
+          label: "Phone",
+          name: "phone",
+          value: "",
+          options: [{ label: "Phone", name: "phone.match", value: "match" }],
+        },
+      ],
+    },
+    meCard: {
+      label: "Contact (MeCard)",
+      controls: [
+        {
+          label: "Last Name",
+          name: "lastname",
+          value: "",
+          options: [{ label: "Last Name", name: "meCard.lastname", value: "lastname" }],
+        },
+        {
+          label: "First Name",
+          name: "firstname",
+          value: "",
+          options: [{ label: "First Name", name: "meCard.firstname", value: "firstname" }],
+        },
+        {
+          label: "Phone",
+          name: "phone",
+          value: "",
+          options: [{ label: "Phone", name: "meCard.phone", value: "phone" }],
+        },
+        {
+          label: "Email",
+          name: "email",
+          value: "",
+          options: [
+            { label: "Username", name: "meCard.username", value: "username" },
+            { label: "Email", name: "meCard.email", value: "email" },
+          ],
+        },
+      ],
+    },
+    vCard: {
+      label: "Contact (vCard)",
+      controls: [
+        {
+          label: "Last Name",
+          name: "lastname",
+          value: "",
+          options: [{ label: "Last Name", name: "vCard.lastname", value: "lastname" }],
+        },
+        {
+          label: "First Name",
+          name: "firstname",
+          value: "",
+          options: [{ label: "First Name", name: "vCard.firstname", value: "firstname" }],
+        },
+        {
+          label: "Phone",
+          name: "phone",
+          value: "",
+          options: [{ label: "Phone", name: "vCard.phone", value: "phone" }],
+        },
+        {
+          label: "Email",
+          name: "email",
+          value: "",
+          options: [
+            { label: "Username", name: "vCard.username", value: "username" },
+            { label: "Email", name: "vCard.email", value: "email" },
+          ],
+        },
+        {
+          label: "Address",
+          name: "address",
+          value: "",
+          options: [{ label: "Address", name: "vCard.address", value: "address" }],
+        },
+        {
+          label: "URL",
+          name: "url",
+          value: "",
+          options: [
+            { label: "Notes", name: "vCard.url.notes", value: "notes" },
+            { label: "Custom: URL", name: "vCard.url.custom", value: "custom" },
+          ],
+        },
+        {
+          label: "Company",
+          name: "company",
+          value: "",
+          options: [{ label: "Company", name: "vCard.company", value: "company" }],
+        },
+        {
+          label: "Job Title",
+          name: "job",
+          value: "",
+          options: [
+            { label: "Notes", name: "vCard.job.notes", value: "notes" },
+            { label: "Custom: Job Title", name: "vCard.job.custom", value: "custom" },
+          ],
+        },
+      ],
+    },
   };
 
   dataToShareValues = toSignal(this.visualizeForm.valueChanges);
@@ -110,7 +247,7 @@ export class VaultItemVisualizerComponent implements OnInit {
   }
 
   get fieldMappingsControls(): Array<FieldMappingControl> {
-    return this.fieldMappingsControlMeta[this.qrCodeType];
+    return this.fieldMappingsControlMeta[this.qrCodeType].controls;
   }
 
   constructor(
@@ -124,6 +261,11 @@ export class VaultItemVisualizerComponent implements OnInit {
       { name: "URL", value: "url" },
       // { name: i18nService.t("example"), value: example },
     ];
+    // Example on how to add all types from meta.
+    // this.qrCodeOptions = Object.keys(this.fieldMappingsControlMeta).map((qrCodeOption) => {
+    //   return { name: this.fieldMappingsControlMeta[qrCodeOption].label, value: qrCodeOption };
+    // });
+
     effect(async () => {
       /* Retriggers whenever form changes */
       const values = this.dataToShareValues();

@@ -28,12 +28,13 @@
     <form [formGroup]="fieldMappingsGroup">
       <div *ngFor="let fieldMapping of fieldMappingsControls">
         <bit-form-field>
-          <bit-label [for]="fieldMapping.name">{{ fieldMapping.name }}</bit-label>
+          <bit-label [for]="fieldMapping.name">Field for {{ fieldMapping.label }}</bit-label>
           <bit-select [id]="fieldMapping.name" formControlName="{{ fieldMapping.name }}">
             <bit-option
               *ngFor="let option of fieldMapping.options"
+              [id]="option.name"
               [value]="option.value"
-              [label]="option.name"
+              [label]="option.label"
             >
             </bit-option>
           </bit-select>
