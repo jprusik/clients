@@ -74,7 +74,7 @@ export class VaultItemVisualizerComponent implements OnInit {
     fieldMappings: new FormGroup({}),
   });
 
-  qrCodeType = toSignal(this.visualizeForm.controls.qrCodeType.valueChanges);
+  dataToShareValues = toSignal(this.visualizeForm.valueChanges);
 
   qrCodePath: WritableSignal<string> = signal("");
 
@@ -127,12 +127,12 @@ export class VaultItemVisualizerComponent implements OnInit {
           value: "",
           options: [{ label: "Password", name: "password.match", value: "match" }],
         },
-        {
-          label: "Additional Options",
-          name: "additional",
-          value: "",
-          options: [{ label: "Custom: Wi-Fi Options", name: "additional.match", value: "match" }],
-        },
+        // {
+        //   label: "Additional Options",
+        //   name: "additional",
+        //   value: "",
+        //   options: [{ label: "Custom: Wi-Fi Options", name: "additional.match", value: "match" }],
+        // },
       ],
     },
     url: {
@@ -278,12 +278,16 @@ export class VaultItemVisualizerComponent implements OnInit {
     },
   };
 
+  get qrCodeType() {
+    return this.visualizeForm.value.qrCodeType;
+  }
+
   get fieldMappingsGroup(): FormGroup {
     return this.visualizeForm.controls.fieldMappings;
   }
 
   get fieldMappingsControls(): Array<FieldMappingControl> {
-    return this.fieldMappingsControlMeta[this.qrCodeType()].controls;
+    return this.fieldMappingsControlMeta[this.qrCodeType].controls;
   }
 
   constructor(
@@ -304,12 +308,16 @@ export class VaultItemVisualizerComponent implements OnInit {
 
     effect(async () => {
       /* Retriggers whenever form changes */
-      const value = this.qrCodeType();
-      if (typeof value !== "undefined" && value !== null) {
+      const values = this.dataToShareValues();
+
+      if (typeof values !== "undefined" && values.qrCodeType !== null) {
         /* @TODO pass the fieldMappings select values with cipher data, let bkgd fn handle? */
         const qrCodePath = await generateQRCodePath(
           "wifi",
-          this.visualizeForm.controls.fieldMappings.value,
+          {
+            ssid: values.fieldMappings.ssid,
+            password: values.fieldMappings.password,
+          },
           this.cipher,
         );
         this.qrCodePath.set(qrCodePath);
