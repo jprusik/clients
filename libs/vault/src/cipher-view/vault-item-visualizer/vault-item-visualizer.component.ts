@@ -1,5 +1,14 @@
 import { CommonModule } from "@angular/common";
-import { Component, effect, Input, OnInit, signal, WritableSignal } from "@angular/core";
+import {
+  Component,
+  computed,
+  effect,
+  Input,
+  OnInit,
+  Signal,
+  signal,
+  WritableSignal,
+} from "@angular/core";
 import { takeUntilDestroyed, toSignal } from "@angular/core/rxjs-interop";
 import {
   FormBuilder,
@@ -9,7 +18,9 @@ import {
   ReactiveFormsModule,
 } from "@angular/forms";
 
+import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { QRCodeOption } from "@bitwarden/common/platform/enums";
+import { CipherType } from "@bitwarden/common/vault/enums";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import {
   TypographyModule,
@@ -22,6 +33,8 @@ import {
   SelectModule,
 } from "@bitwarden/components";
 import { generateQRCodePath } from "@bitwarden/vault";
+
+type FieldTuple = [string, string, string];
 
 type FieldMappingControl = {
   label: string;
@@ -60,6 +73,38 @@ export class VaultItemVisualizerComponent implements OnInit {
     /* TODO: enumerate possible types for fieldMappings? */
     fieldMappings: new FormGroup({}),
   });
+
+  qrCodeType = toSignal(this.visualizeForm.controls.qrCodeType.valueChanges);
+
+  qrCodePath: WritableSignal<string> = signal("");
+
+  cipherFieldTuples: WritableSignal<Array<FieldTuple>> = signal([]);
+
+  availableCipherFields: Signal<Array<{ name: string; label: string }>> = computed(() =>
+    this.cipherFieldTuples().reduce((prev, [name, label]) => {
+      return [
+        ...prev,
+        {
+          name,
+          label,
+        },
+      ];
+    }, []),
+  );
+
+  availableCipherFieldsMap: Signal<{ [key: string]: { name: string; label: string } }> = computed(
+    () =>
+      this.cipherFieldTuples().reduce((prev, [name, label, value]) => {
+        return {
+          ...prev,
+          [name]: {
+            name,
+            label,
+            value,
+          },
+        };
+      }, {}),
+  );
 
   fieldMappingsControlMeta: {
     [key: string]: { label: string; controls: Array<FieldMappingControl> };
@@ -233,27 +278,22 @@ export class VaultItemVisualizerComponent implements OnInit {
     },
   };
 
-  dataToShareValues = toSignal(this.visualizeForm.valueChanges);
-
-  qrCodePath: WritableSignal<string> = signal("");
-
-  get qrCodeType() {
-    return this.visualizeForm.value.qrCodeType;
-  }
-
   get fieldMappingsGroup(): FormGroup {
     return this.visualizeForm.controls.fieldMappings;
   }
 
   get fieldMappingsControls(): Array<FieldMappingControl> {
-    return this.fieldMappingsControlMeta[this.qrCodeType].controls;
+    return this.fieldMappingsControlMeta[this.qrCodeType()].controls;
   }
 
-  constructor(private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder,
+    private i18nService: I18nService,
+  ) {
     /* Set initial QR Code options */
     this.qrCodeOptions = [
       { name: "Wi-Fi", value: "wifi" },
-      { name: "Contact", value: "contact" },
+      { name: "Plain Text", value: "plaintext" },
       { name: "URL", value: "url" },
       // { name: i18nService.t("example"), value: example },
     ];
@@ -264,39 +304,38 @@ export class VaultItemVisualizerComponent implements OnInit {
 
     effect(async () => {
       /* Retriggers whenever form changes */
-      const values = this.dataToShareValues();
-      if (typeof values !== "undefined" && values.qrCodeType !== null) {
+      const value = this.qrCodeType();
+      if (typeof value !== "undefined" && value !== null) {
         /* @TODO pass the fieldMappings select values with cipher data, let bkgd fn handle? */
         const qrCodePath = await generateQRCodePath(
           "wifi",
-          {
-            ssid: values.fieldMappings.ssid,
-            password: values.fieldMappings.password,
-          },
+          this.visualizeForm.controls.fieldMappings.value,
           this.cipher,
         );
         this.qrCodePath.set(qrCodePath);
       }
     });
 
-    this.visualizeForm.controls.qrCodeType.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
-      const controlNames = this.fieldMappingsControls.map(({ name }) => name);
-      for (const controlName of controlNames) {
-        // if (controlName === "qrCodeType") {
-        //   continue;
-        // }
-        this.visualizeForm.controls.fieldMappings.removeControl(controlName);
-      }
-
-      this.updateControls();
-    });
+    this.visualizeForm.controls.qrCodeType.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe((value) => {
+        const controlNames = this.fieldMappingsControls.map(({ name }) => name);
+        for (const controlName of controlNames) {
+          // if (controlName === "qrCodeType") {
+          //   continue;
+          // }
+          this.visualizeForm.controls.fieldMappings.removeControl(controlName);
+        }
+        this.updateControls();
+        this.updateAvailableCipherFields();
+      });
   }
 
   updateControls() {
     const fields = this.fieldMappingsControls;
     for (const { name, value } of fields) {
       this.visualizeForm.controls.fieldMappings.addControl(name, this.fb.control(value));
-      // @TODO handle cipher fields and defaults
+      // @TODO handle cipher fields and map defaults
     }
   }
 
@@ -305,5 +344,55 @@ export class VaultItemVisualizerComponent implements OnInit {
     this.visualizeForm.controls.qrCodeType.setValue("wifi", { emitEvent: false });
     /* Ensure form updated, allow subscribers */
     this.updateControls();
+    this.updateAvailableCipherFields();
+  }
+
+  updateAvailableCipherFields() {
+    const fields: Array<FieldTuple> = [];
+
+    if (this.cipher.type === CipherType.Login) {
+      const custom = this.cipher.fields.map(
+        (field, i): FieldTuple => [`field.${i}`, `Custom field: ${field.name}`, field.value],
+      );
+      fields.push(...custom);
+
+      const uris = this.cipher.login.uris.map(
+        ({ _uri }, i): FieldTuple => [
+          `uri.${i}`,
+          this.i18nService.t("websiteUriCount", i + 1),
+          _uri,
+        ],
+      );
+      fields.push(...uris);
+
+      const username: FieldTuple = [
+        "username",
+        this.i18nService.t("username"),
+        this.cipher.login.username,
+      ];
+      const password: FieldTuple = [
+        "password",
+        this.i18nService.t("password"),
+        this.cipher.login.password,
+      ];
+
+      fields.push(username, password);
+    }
+
+    if (this.cipher.type === CipherType.Identity) {
+      const username: FieldTuple = [
+        "username",
+        this.i18nService.t("username"),
+        this.cipher.identity.username,
+      ];
+      const email: FieldTuple = ["email", this.i18nService.t("email"), this.cipher.identity.email];
+
+      fields.push(username, email);
+    }
+
+    const notes: FieldTuple = ["notes", this.i18nService.t("notes"), this.cipher.notes];
+    fields.push(notes);
+
+    this.cipherFieldTuples.set(fields);
   }
 }

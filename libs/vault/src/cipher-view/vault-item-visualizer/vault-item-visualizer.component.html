@@ -31,12 +31,10 @@
           <bit-label [for]="fieldMapping.name">Field for {{ fieldMapping.label }}</bit-label>
           <bit-select [id]="fieldMapping.name" formControlName="{{ fieldMapping.name }}">
             <bit-option
-              *ngFor="let option of fieldMapping.options"
-              [id]="option.name"
-              [value]="option.value"
+              *ngFor="let option of availableCipherFields()"
+              [value]="option.name"
               [label]="option.label"
-            >
-            </bit-option>
+            ></bit-option>
           </bit-select>
         </bit-form-field>
       </div>
