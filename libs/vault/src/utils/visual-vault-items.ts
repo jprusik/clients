@@ -19,7 +19,7 @@ import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
         }
 */
 
-type QROptions = "wifi" | "data" | "url";
+type QROptions = "wifi" | "plaintext" | "url";
 
 export function inferQRTypeValuesByCipher(cipher: CipherView): { type: QROptions } {
   switch (cipher.type) {
@@ -33,20 +33,30 @@ export function inferQRTypeValuesByCipher(cipher: CipherView): { type: QROptions
       break;
   }
 
-  return { type: "data" };
+  return { type: "plaintext" };
 }
 
-export function encodeCipherForQRType(type: QROptions, mapping: any, cipher: CipherView): string {
+export function encodeCipherForQRType(
+  type: QROptions,
+  mapping: any,
+  cipherFieldMap: {
+    [key: string]: { name: string; label: string; value: string };
+  },
+): string {
   let encodable: string = "";
   switch (type) {
     case "wifi":
-      encodable = `WIFI:S:${mapping.ssid};T:<WPA|WEP|>;P:${mapping.password};;`;
+      // Format: “WIFI:” [type “;”] [trdisable “;”] ssid “;” [hidden “;”] [id “;”] [password “;”] [publickey “;”] “;”
+      // "WIFI:T:<WPA|WEP|>;S:<ssid>;P:<password>;;"
+      // e.g. "WIFI:T:WPA;S:TroyAndAbedInTheModem;P:MyPassword;;"
+      encodable = `WIFI:T:WPA;S:${cipherFieldMap[mapping.ssid].value};P:${cipherFieldMap[mapping.password].value};;`;
       break;
     case "url":
+      encodable = cipherFieldMap[mapping.link].value;
       break;
-    case "data":
+    case "plaintext":
     default:
-      encodable = mapping.data;
+      encodable = cipherFieldMap[mapping.content].value;
       break;
   }
 
@@ -62,17 +72,20 @@ export function encodeCipherForQRType(type: QROptions, mapping: any, cipher: Cip
 export async function generateQRCodePath(
   type: QROptions,
   mapping: any,
-  cipher: CipherView,
-): Promise<string> {
-  const encodable = encodeCipherForQRType(type, mapping, cipher);
+  cipherFieldMap: {
+    [key: string]: { name: string; label: string; value: string };
+  },
+): Promise<{ path: string; viewBox: string }> {
+  const encodable = encodeCipherForQRType(type, mapping, cipherFieldMap);
 
   const svg = await QRCode.toString(encodable, { type: "svg" });
 
   const doc = new DOMParser().parseFromString(svg, "image/svg+xml");
+  const root = doc.firstChild! as SVGElement;
+  const path = root.lastChild as SVGPathElement;
 
-  const {
-    firstChild: { lastChild: path },
-  } = doc;
-
-  return path.attributes.d.value;
+  return {
+    path: path.attributes.getNamedItem("d")!.value,
+    viewBox: root.attributes.getNamedItem("viewBox")!.value,
+  };
 }
