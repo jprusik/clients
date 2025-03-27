@@ -9,6 +9,7 @@ import { NotificationCipherData } from "../content/components/cipher/types";
 import { OrgView } from "../content/components/common-types";
 import { NotificationConfirmationContainer } from "../content/components/notification/confirmation-container";
 import { NotificationContainer } from "../content/components/notification/container";
+import { selectedFolder as selectedFolderSignal } from "../content/components/signals/selected-folder";
 import { buildSvgDomElement } from "../utils";
 import { circleCheckIcon } from "../utils/svg-icons";
 
@@ -248,7 +249,9 @@ function handleCloseNotification(e: Event) {
 function handleSaveAction(e: Event) {
   e.preventDefault();
 
-  sendSaveCipherMessage(removeIndividualVault());
+  const selectedFolder = selectedFolderSignal.get();
+
+  sendSaveCipherMessage(removeIndividualVault(), selectedFolder);
   if (removeIndividualVault()) {
     return;
   }

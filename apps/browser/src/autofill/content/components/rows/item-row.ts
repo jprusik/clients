@@ -4,15 +4,17 @@ import { html, TemplateResult } from "lit";
 import { Theme, ThemeTypes } from "@bitwarden/common/platform/enums";
 
 import { spacing, themes, typography } from "../../../content/components/constants/styles";
+import { theme as themeSignal } from "../signals/theme";
 
 export function ItemRow({
   theme = ThemeTypes.Light,
   children,
 }: {
-  theme: Theme;
+  theme?: Theme;
   children: TemplateResult | TemplateResult[];
 }) {
-  return html` <div class=${itemRowStyles({ theme })}>${children}</div> `;
+  const resolvedTheme = theme || themeSignal.get();
+  return html` <div class=${itemRowStyles({ theme: resolvedTheme })}>${children}</div> `;
 }
 
 export const itemRowStyles = ({ theme }: { theme: Theme }) => css`
