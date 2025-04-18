@@ -1,4 +1,4 @@
-import { CipherType } from "@bitwarden/common/vault/enums";
+import { CipherTypeValue } from "@bitwarden/common/vault/enums";
 
 export const AutofillOverlayElement = {
   Button: "autofill-inline-menu-button",
@@ -21,12 +21,25 @@ export const RedirectFocusDirection = {
   Next: "next",
 } as const;
 
+/**
+ * @deprecated instead use `InlineMenuFillTypes` constants and `InlineMenuFillTypeValue` type over unsafe typescript enums
+ **/
 export enum InlineMenuFillType {
   AccountCreationUsername = 5,
   PasswordGeneration = 6,
   CurrentPasswordUpdate = 7,
 }
-export type InlineMenuFillTypes = InlineMenuFillType | CipherType;
+
+export const InlineMenuFillTypes = {
+  AccountCreationUsername: 5,
+  PasswordGeneration: 6,
+  CurrentPasswordUpdate: 7,
+} as const;
+
+export type InlineMenuFillTypeValue =
+  (typeof InlineMenuFillTypes)[keyof typeof InlineMenuFillTypes];
+
+export type InlineMenuFillTypes = InlineMenuFillTypeValue | CipherTypeValue;
 
 export const InlineMenuAccountCreationFieldType = {
   Text: "text",
