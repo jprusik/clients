@@ -26,8 +26,8 @@ import {
 import { EventType } from "@bitwarden/common/enums";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { TotpService } from "@bitwarden/common/vault/abstractions/totp.service";
-import { CipherType } from "@bitwarden/common/vault/enums";
-import { CipherRepromptType } from "@bitwarden/common/vault/enums/cipher-reprompt-type";
+import { CipherTypes } from "@bitwarden/common/vault/enums";
+import { CipherRepromptTypes } from "@bitwarden/common/vault/enums/cipher-reprompt-type";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 
 import { openUnlockPopout } from "../../auth/popup/utils/auth-popout-window";
@@ -118,9 +118,9 @@ export class ContextMenuClickedHandler {
     } else if (menuItemId === NOOP_COMMAND_SUFFIX) {
       const additionalCiphersToGet =
         info.parentMenuItemId === AUTOFILL_IDENTITY_ID
-          ? [CipherType.Identity]
+          ? [CipherTypes.Identity]
           : info.parentMenuItemId === AUTOFILL_CARD_ID
-            ? [CipherType.Card]
+            ? [CipherTypes.Card]
             : [];
 
       // This NOOP item has come through which is generally only for no access state but since we got here
@@ -168,7 +168,7 @@ export class ContextMenuClickedHandler {
       }
       case COPY_USERNAME_ID:
         if (menuItemId === CREATE_LOGIN_ID) {
-          await openAddEditVaultItemPopout(tab, { cipherType: CipherType.Login });
+          await openAddEditVaultItemPopout(tab, { cipherType: CipherTypes.Login });
           break;
         }
 
@@ -176,7 +176,7 @@ export class ContextMenuClickedHandler {
         break;
       case COPY_PASSWORD_ID:
         if (menuItemId === CREATE_LOGIN_ID) {
-          await openAddEditVaultItemPopout(tab, { cipherType: CipherType.Login });
+          await openAddEditVaultItemPopout(tab, { cipherType: CipherTypes.Login });
           break;
         }
 
@@ -195,7 +195,7 @@ export class ContextMenuClickedHandler {
         break;
       case COPY_VERIFICATION_CODE_ID:
         if (menuItemId === CREATE_LOGIN_ID) {
-          await openAddEditVaultItemPopout(tab, { cipherType: CipherType.Login });
+          await openAddEditVaultItemPopout(tab, { cipherType: CipherTypes.Login });
           break;
         }
 
@@ -218,18 +218,18 @@ export class ContextMenuClickedHandler {
 
   private async isPasswordRepromptRequired(cipher: CipherView): Promise<boolean> {
     return (
-      cipher.reprompt === CipherRepromptType.Password &&
+      cipher.reprompt === CipherRepromptTypes.Password &&
       (await this.userVerificationService.hasMasterPasswordAndMasterKeyHash())
     );
   }
 
   private getCipherCreationType(menuItemId?: string): AutofillCipherTypeId | null {
     return menuItemId === CREATE_IDENTITY_ID
-      ? CipherType.Identity
+      ? CipherTypes.Identity
       : menuItemId === CREATE_CARD_ID
-        ? CipherType.Card
+        ? CipherTypes.Card
         : menuItemId === CREATE_LOGIN_ID
-          ? CipherType.Login
+          ? CipherTypes.Login
           : null;
   }
 
