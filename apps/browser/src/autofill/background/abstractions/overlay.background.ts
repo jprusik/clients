@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { CipherTypeValue } from "@bitwarden/common/vault/enums";
 import { CipherRepromptTypeValue } from "@bitwarden/common/vault/enums/cipher-reprompt-type";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
@@ -22,8 +24,6 @@ export type SubFrameOffsetData = {
 } | null;
 
 export type SubFrameOffsetsForTab = Record<
-  // FIXME: Update this file to be type safe and remove this and next line
-  // @ts-strict-ignore next-line
   chrome.runtime.MessageSender["tab"]["id"],
   Map<chrome.runtime.MessageSender["frameId"], SubFrameOffsetData>
 >;

@@ -21,15 +21,6 @@ export const RedirectFocusDirection = {
   Next: "next",
 } as const;
 
-/**
- * @deprecated instead use `InlineMenuFillTypes` constants and `InlineMenuFillTypeValue` type over unsafe typescript enums
- **/
-export enum InlineMenuFillType {
-  AccountCreationUsername = 5,
-  PasswordGeneration = 6,
-  CurrentPasswordUpdate = 7,
-}
-
 export const InlineMenuFillTypes = {
   AccountCreationUsername: 5,
   PasswordGeneration: 6,

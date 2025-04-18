@@ -1,5 +1,5 @@
 /**
- * @deprecated instead use `ThemeTypes` constants and `Theme` type over unsafe typescript enums
+ * @deprecated instead use `AuthenticationStatuses` constants and `AuthenticationStatusValue` type over unsafe typescript enums
  **/
 export enum AuthenticationStatus {
   LoggedOut = 0,

@@ -1,5 +1,5 @@
 /**
- * @deprecated instead use `CipherTypes` constants and `CipherTypeValue` type over unsafe typescript enums
+ * @deprecated instead use `FieldTypes` constants and `FieldTypeValue` type over unsafe typescript enums
  **/
 export enum FieldType {
   Text = 0,
