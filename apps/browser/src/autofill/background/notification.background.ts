@@ -7,7 +7,7 @@ import { PolicyService } from "@bitwarden/common/admin-console/abstractions/poli
 import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
-import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
+import { AuthenticationStatuses } from "@bitwarden/common/auth/enums/authentication-status";
 import { getOptionalUserId, getUserId } from "@bitwarden/common/auth/services/account.service";
 import {
   ExtensionCommand,
@@ -343,7 +343,7 @@ export default class NotificationBackground {
     sender: chrome.runtime.MessageSender,
   ) {
     const authStatus = await this.getAuthStatus();
-    if (authStatus === AuthenticationStatus.LoggedOut) {
+    if (authStatus === AuthenticationStatuses.LoggedOut) {
       return;
     }
 
@@ -356,7 +356,7 @@ export default class NotificationBackground {
 
     const addLoginIsEnabled = await this.getEnableAddedLoginPrompt();
 
-    if (authStatus === AuthenticationStatus.Locked) {
+    if (authStatus === AuthenticationStatuses.Locked) {
       if (addLoginIsEnabled) {
         await this.pushAddLoginToQueue(loginDomain, loginInfo, sender.tab, true);
       }
@@ -437,7 +437,7 @@ export default class NotificationBackground {
       return;
     }
 
-    if ((await this.getAuthStatus()) < AuthenticationStatus.Unlocked) {
+    if ((await this.getAuthStatus()) < AuthenticationStatuses.Unlocked) {
       await this.pushChangePasswordToQueue(
         null,
         loginDomain,
@@ -505,7 +505,7 @@ export default class NotificationBackground {
     }
 
     const currentAuthStatus = await this.getAuthStatus();
-    if (currentAuthStatus !== AuthenticationStatus.Locked || this.notificationQueue.length) {
+    if (currentAuthStatus !== AuthenticationStatuses.Locked || this.notificationQueue.length) {
       return;
     }
 
@@ -565,7 +565,7 @@ export default class NotificationBackground {
     message: NotificationBackgroundExtensionMessage,
     sender: chrome.runtime.MessageSender,
   ) {
-    if ((await this.getAuthStatus()) < AuthenticationStatus.Unlocked) {
+    if ((await this.getAuthStatus()) < AuthenticationStatuses.Unlocked) {
       await BrowserApi.tabSendMessageData(sender.tab, "addToLockedVaultPendingNotifications", {
         commandToRetry: {
           message: {

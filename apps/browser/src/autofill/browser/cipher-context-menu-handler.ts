@@ -2,7 +2,7 @@ import { firstValueFrom } from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
-import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
+import { AuthenticationStatuses } from "@bitwarden/common/auth/enums/authentication-status";
 import { getOptionalUserId } from "@bitwarden/common/auth/services/account.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
@@ -28,7 +28,7 @@ export class CipherContextMenuHandler {
 
     const authStatus = await this.authService.getAuthStatus();
     await MainContextMenuHandler.removeAll();
-    if (authStatus !== AuthenticationStatus.Unlocked) {
+    if (authStatus !== AuthenticationStatuses.Unlocked) {
       // Should I pass in the auth status or even have two separate methods for this
       // on MainContextMenuHandler
       await this.mainContextMenuHandler.noAccess();

@@ -16,7 +16,7 @@ import { EventCollectionService } from "@bitwarden/common/abstractions/event/eve
 import { AccountInfo, AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
-import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
+import { AuthenticationStatuses } from "@bitwarden/common/auth/enums/authentication-status";
 import { getOptionalUserId } from "@bitwarden/common/auth/services/account.service";
 import {
   AutofillOverlayVisibility,
@@ -234,7 +234,7 @@ export default class AutofillService implements AutofillServiceInterface {
     // if not guarded by an active account check (e.g. the user is logged in)
     const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
     const authStatus = await firstValueFrom(this.authService.activeAccountStatus$);
-    const accountIsUnlocked = authStatus === AuthenticationStatus.Unlocked;
+    const accountIsUnlocked = authStatus === AuthenticationStatuses.Unlocked;
     let autoFillOnPageLoadIsEnabled = false;
 
     const injectedScripts = [await this.getBootstrapAutofillContentScript(activeAccount)];

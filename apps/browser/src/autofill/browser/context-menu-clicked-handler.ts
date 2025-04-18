@@ -6,7 +6,7 @@ import { EventCollectionService } from "@bitwarden/common/abstractions/event/eve
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
-import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
+import { AuthenticationStatuses } from "@bitwarden/common/auth/enums/authentication-status";
 import { getOptionalUserId } from "@bitwarden/common/auth/services/account.service";
 import {
   AUTOFILL_CARD_ID,
@@ -80,7 +80,7 @@ export class ContextMenuClickedHandler {
       return;
     }
 
-    if ((await this.authService.getAuthStatus()) < AuthenticationStatus.Unlocked) {
+    if ((await this.authService.getAuthStatus()) < AuthenticationStatuses.Unlocked) {
       const retryMessage: LockedVaultPendingNotificationsData = {
         commandToRetry: {
           message: { command: ExtensionCommand.NoopCommand, contextMenuOnClickData: info },

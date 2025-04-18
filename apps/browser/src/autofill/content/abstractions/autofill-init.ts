@@ -1,4 +1,4 @@
-import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
+import { AuthenticationStatusValue } from "@bitwarden/common/auth/enums/authentication-status";
 import { CipherTypeValue } from "@bitwarden/common/vault/enums";
 
 import { AutofillOverlayElementType } from "../../enums/autofill-overlay.enum";
@@ -17,7 +17,7 @@ export type AutofillExtensionMessage = {
   isInlineMenuHidden?: boolean;
   overlayElement?: AutofillOverlayElementType;
   isFocusingFieldElement?: boolean;
-  authStatus?: AuthenticationStatus;
+  authStatus?: AuthenticationStatusValue;
   isOpeningFullInlineMenu?: boolean;
   addNewCipherType?: CipherTypeValue;
   ignoreFieldFocus?: boolean;

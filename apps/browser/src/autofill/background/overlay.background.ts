@@ -15,7 +15,10 @@ import { parse } from "tldts";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
-import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
+import {
+  AuthenticationStatuses,
+  AuthenticationStatusValue,
+} from "@bitwarden/common/auth/enums/authentication-status";
 import { getOptionalUserId, getUserId } from "@bitwarden/common/auth/services/account.service";
 import {
   AutofillOverlayVisibility,
@@ -332,7 +335,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    */
   async updateOverlayCiphers(updateAllCipherTypes = true, refocusField = false) {
     const authStatus = await firstValueFrom(this.authService.activeAccountStatus$);
-    if (authStatus === AuthenticationStatus.Unlocked) {
+    if (authStatus === AuthenticationStatuses.Unlocked) {
       this.inlineMenuCiphers = new Map();
       this.updateOverlayCiphers$.next({ updateAllCipherTypes, refocusField });
     }
@@ -1086,7 +1089,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     if (
       (await this.checkFocusedFieldHasValue(sender.tab)) &&
       (this.checkIsInlineMenuCiphersPopulated(sender) ||
-        (await this.getAuthStatus()) !== AuthenticationStatus.Unlocked)
+        (await this.getAuthStatus()) !== AuthenticationStatuses.Unlocked)
     ) {
       return;
     }
@@ -1736,7 +1739,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     if (
       !previousFocusedFieldData ||
       !this.isInlineMenuButtonVisible ||
-      (await this.getAuthStatus()) !== AuthenticationStatus.Unlocked
+      (await this.getAuthStatus()) !== AuthenticationStatuses.Unlocked
     ) {
       return;
     }
@@ -2057,7 +2060,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     this.cancelInlineMenuDelayedClose$.next(true);
     this.cancelInlineMenuFadeInAndPositionUpdate();
 
-    if ((await this.getAuthStatus()) !== AuthenticationStatus.Unlocked) {
+    if ((await this.getAuthStatus()) !== AuthenticationStatuses.Unlocked) {
       await this.unlockVault(port);
       return;
     }
@@ -3021,11 +3024,11 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    * @param showInlineMenuAccountCreation - Identifies if the inline menu account creation should be shown
    */
   private async shouldInitInlineMenuPasswordGenerator(
-    authStatus: AuthenticationStatus,
+    authStatus: AuthenticationStatusValue,
     isInlineMenuListPort: boolean,
     showInlineMenuAccountCreation: boolean,
   ) {
-    if (!isInlineMenuListPort || authStatus !== AuthenticationStatus.Unlocked) {
+    if (!isInlineMenuListPort || authStatus !== AuthenticationStatuses.Unlocked) {
       return false;
     }
 

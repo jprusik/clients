@@ -2,7 +2,7 @@
 // @ts-strict-ignore
 import { mock } from "jest-mock-extended";
 
-import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
+import { AuthenticationStatuses } from "@bitwarden/common/auth/enums/authentication-status";
 import { UriMatchStrategy } from "@bitwarden/common/models/domain/domain-service";
 import { ThemeTypes } from "@bitwarden/common/platform/enums";
 import { CipherTypes } from "@bitwarden/common/vault/enums";
@@ -177,7 +177,7 @@ export function createInitAutofillInlineMenuButtonMessageMock(
     command: "initAutofillInlineMenuButton",
     translations: overlayPagesTranslations,
     styleSheetUrl: "https://jest-testing-website.com",
-    authStatus: AuthenticationStatus.Unlocked,
+    authStatus: AuthenticationStatuses.Unlocked,
     portKey: "portKey",
     ...customFields,
   };
@@ -214,7 +214,7 @@ export function createInitAutofillInlineMenuListMessageMock(
     translations: overlayPagesTranslations,
     styleSheetUrl: "https://jest-testing-website.com",
     theme: ThemeTypes.Light,
-    authStatus: AuthenticationStatus.Unlocked,
+    authStatus: AuthenticationStatuses.Unlocked,
     portKey: "portKey",
     inlineMenuFillType: CipherTypes.Login,
     ciphers: [

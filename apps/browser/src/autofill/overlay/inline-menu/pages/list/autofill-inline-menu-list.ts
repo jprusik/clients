@@ -5,7 +5,10 @@ import "lit/polyfill-support.js";
 
 import { FocusableElement } from "tabbable";
 
-import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
+import {
+  AuthenticationStatuses,
+  AuthenticationStatusValue,
+} from "@bitwarden/common/auth/enums/authentication-status";
 import { EVENTS, UPDATE_PASSKEYS_HEADINGS_ON_SCROLL } from "@bitwarden/common/autofill/constants";
 import { CipherRepromptTypeValue, CipherTypes } from "@bitwarden/common/vault/enums";
 
@@ -53,7 +56,7 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
   private lastPasskeysListItemHeight: number;
   private ciphersListHeight: number;
   private isPasskeyAuthInProgress = false;
-  private authStatus: AuthenticationStatus;
+  private authStatus: AuthenticationStatusValue;
   private readonly showCiphersPerPage = 6;
   private readonly headingBorderClass = "inline-menu-list-heading--bordered";
   private readonly inlineMenuListWindowMessageHandlers: AutofillInlineMenuListWindowMessageHandlers =
@@ -113,7 +116,7 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
 
     this.shadowDom.append(linkElement, this.inlineMenuListContainer);
 
-    if (authStatus !== AuthenticationStatus.Unlocked) {
+    if (authStatus !== AuthenticationStatuses.Unlocked) {
       this.buildLockedInlineMenu();
       return;
     }
@@ -210,7 +213,7 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
    * Handles the show save login inline menu list message that is triggered from the background script.
    */
   private handleShowSaveLoginInlineMenuList() {
-    if (this.authStatus === AuthenticationStatus.Unlocked) {
+    if (this.authStatus === AuthenticationStatuses.Unlocked) {
       this.resetInlineMenuContainer();
       this.buildSaveLoginInlineMenu();
     }
@@ -422,7 +425,7 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
   private handleUpdateAutofillInlineMenuGeneratedPassword(
     message: UpdateAutofillInlineMenuGeneratedPasswordMessage,
   ) {
-    if (this.authStatus !== AuthenticationStatus.Unlocked || !message.generatedPassword) {
+    if (this.authStatus !== AuthenticationStatuses.Unlocked || !message.generatedPassword) {
       return;
     }
 
