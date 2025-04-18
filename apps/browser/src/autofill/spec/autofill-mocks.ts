@@ -5,8 +5,8 @@ import { mock } from "jest-mock-extended";
 import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
 import { UriMatchStrategy } from "@bitwarden/common/models/domain/domain-service";
 import { ThemeTypes } from "@bitwarden/common/platform/enums";
-import { CipherType } from "@bitwarden/common/vault/enums";
-import { CipherRepromptType } from "@bitwarden/common/vault/enums/cipher-reprompt-type";
+import { CipherTypes } from "@bitwarden/common/vault/enums";
+import { CipherRepromptTypes } from "@bitwarden/common/vault/enums/cipher-reprompt-type";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 
 import {
@@ -193,8 +193,8 @@ export function createAutofillOverlayCipherDataMock(
       username: `username${index}`,
       passkey: null,
     },
-    type: CipherType.Login,
-    reprompt: CipherRepromptType.None,
+    type: CipherTypes.Login,
+    reprompt: CipherRepromptTypes.None,
     favorite: false,
     icon: {
       imageEnabled: true,
@@ -216,7 +216,7 @@ export function createInitAutofillInlineMenuListMessageMock(
     theme: ThemeTypes.Light,
     authStatus: AuthenticationStatus.Unlocked,
     portKey: "portKey",
-    inlineMenuFillType: CipherType.Login,
+    inlineMenuFillType: CipherTypes.Login,
     ciphers: [
       createAutofillOverlayCipherDataMock(1, {
         icon: {
@@ -265,7 +265,7 @@ export function createFocusedFieldDataMock(
       paddingRight: "6px",
       paddingLeft: "6px",
     },
-    inlineMenuFillType: CipherType.Login,
+    inlineMenuFillType: CipherTypes.Login,
     tabId: 1,
     frameId: 2,
     ...customFields,

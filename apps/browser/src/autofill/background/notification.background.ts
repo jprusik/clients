@@ -29,7 +29,7 @@ import { ThemeStateService } from "@bitwarden/common/platform/theming/theme-stat
 import { UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
-import { CipherType } from "@bitwarden/common/vault/enums";
+import { CipherTypes } from "@bitwarden/common/vault/enums";
 import { VaultMessages } from "@bitwarden/common/vault/enums/vault-messages.enum";
 import { buildCipherIcon } from "@bitwarden/common/vault/icon/build-cipher-icon";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
@@ -206,7 +206,7 @@ export default class NotificationBackground {
       return {
         id,
         name,
-        type: CipherType.Login,
+        type: CipherTypes.Login,
         reprompt,
         favorite,
         ...(organizationCategories.length ? { organizationCategories } : {}),
@@ -764,7 +764,7 @@ export default class NotificationBackground {
 
   private async getDecryptedCipherById(cipherId: string, userId: UserId) {
     const cipher = await this.cipherService.get(cipherId, userId);
-    if (cipher != null && cipher.type === CipherType.Login) {
+    if (cipher != null && cipher.type === CipherTypes.Login) {
       return await cipher.decrypt(
         await this.cipherService.getKeyForCipherKeyDecryption(cipher, userId),
       );
@@ -989,7 +989,7 @@ export default class NotificationBackground {
     const cipherView = new CipherView();
     cipherView.name = (Utils.getHostname(message.uri) || message.domain).replace(/^www\./, "");
     cipherView.folderId = folderId;
-    cipherView.type = CipherType.Login;
+    cipherView.type = CipherTypes.Login;
     cipherView.login = loginView;
 
     return cipherView;

@@ -40,7 +40,7 @@ import { UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { TotpService } from "@bitwarden/common/vault/abstractions/totp.service";
 import { VaultSettingsService } from "@bitwarden/common/vault/abstractions/vault-settings/vault-settings.service";
-import { CipherType } from "@bitwarden/common/vault/enums";
+import { CipherTypes, CipherTypeValue } from "@bitwarden/common/vault/enums";
 import { buildCipherIcon } from "@bitwarden/common/vault/icon/build-cipher-icon";
 import { CardView } from "@bitwarden/common/vault/models/view/card.view";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
@@ -60,7 +60,6 @@ import {
   AutofillOverlayPort,
   InlineMenuAccountCreationFieldType,
   InlineMenuAccountCreationFieldTypes,
-  InlineMenuFillType,
   InlineMenuFillTypes,
   MAX_SUB_FRAME_DEPTH,
 } from "../enums/autofill-overlay.enum";
@@ -446,8 +445,8 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     this.cardAndIdentityCiphers.clear();
     const cipherViews = (
       await this.cipherService.getAllDecryptedForUrl(currentTab.url || "", userId, [
-        CipherType.Card,
-        CipherType.Identity,
+        CipherTypes.Card,
+        CipherTypes.Identity,
       ])
     ).sort((a, b) => this.cipherService.sortCiphersByLastUsedThenName(a, b));
 
@@ -459,7 +458,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       const cipherView = cipherViews[cipherIndex];
       if (
         !this.cardAndIdentityCiphers.has(cipherView) &&
-        [CipherType.Card, CipherType.Identity].includes(cipherView.type)
+        ([CipherTypes.Card, CipherTypes.Identity] as CipherTypeValue[]).includes(cipherView.type)
       ) {
         this.cardAndIdentityCiphers.add(cipherView);
       }
@@ -514,7 +513,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     for (let cipherIndex = 0; cipherIndex < inlineMenuCiphersArray.length; cipherIndex++) {
       const [inlineMenuCipherId, cipher] = inlineMenuCiphersArray[cipherIndex];
 
-      if (cipher.type === CipherType.Login) {
+      if (cipher.type === CipherTypes.Login) {
         accountCreationLoginCiphers.push(
           await this.buildCipherData({
             inlineMenuCipherId,
@@ -526,7 +525,10 @@ export class OverlayBackground implements OverlayBackgroundInterface {
         continue;
       }
 
-      if (cipher.type !== CipherType.Identity || !this.focusedFieldData?.accountCreationFieldType) {
+      if (
+        cipher.type !== CipherTypes.Identity ||
+        !this.focusedFieldData?.accountCreationFieldType
+      ) {
         continue;
       }
 
@@ -576,19 +578,19 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       const [inlineMenuCipherId, cipher] = inlineMenuCiphersArray[cipherIndex];
 
       switch (cipher.type) {
-        case CipherType.Card:
+        case CipherTypes.Card:
           if (areKeyValuesNull(cipher.card)) {
             continue;
           }
           break;
 
-        case CipherType.Identity:
+        case CipherTypes.Identity:
           if (areKeyValuesNull(cipher.identity)) {
             continue;
           }
           break;
 
-        case CipherType.Login:
+        case CipherTypes.Login:
           if (
             areKeyValuesNull(cipher.login, ["username", "password", "totp", "fido2Credentials"])
           ) {
@@ -642,7 +644,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     cipher: CipherView,
     domainExclusions: Set<string> | null,
   ): Promise<boolean> {
-    if (cipher.type !== CipherType.Login || !this.focusedFieldData?.showPasskeys) {
+    if (cipher.type !== CipherTypes.Login || !this.focusedFieldData?.showPasskeys) {
       return false;
     }
 
@@ -706,7 +708,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       accountCreationFieldType: this.focusedFieldData?.accountCreationFieldType,
     };
 
-    if (cipher.type === CipherType.Login) {
+    if (cipher.type === CipherTypes.Login) {
       const totpResponse = cipher.login?.totp
         ? await firstValueFrom(this.totpService.getCode$(cipher.login.totp))
         : undefined;
@@ -726,7 +728,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       return inlineMenuData;
     }
 
-    if (cipher.type === CipherType.Card) {
+    if (cipher.type === CipherTypes.Card) {
       inlineMenuData.card = cipher.card.subTitle;
       return inlineMenuData;
     }
@@ -803,8 +805,8 @@ export class OverlayBackground implements OverlayBackgroundInterface {
 
     // When updating the current password for a field, it should fill with a login cipher
     if (
-      focusedFieldFillType === InlineMenuFillType.CurrentPasswordUpdate &&
-      fillType === CipherType.Login
+      focusedFieldFillType === InlineMenuFillTypes.CurrentPasswordUpdate &&
+      fillType === CipherTypes.Login
     ) {
       return true;
     }
@@ -816,11 +818,11 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    * Identifies whether the inline menu is being shown on an account creation field.
    */
   private shouldShowInlineMenuAccountCreation(): boolean {
-    if (this.focusedFieldMatchesFillType(InlineMenuFillType.AccountCreationUsername)) {
+    if (this.focusedFieldMatchesFillType(InlineMenuFillTypes.AccountCreationUsername)) {
       return true;
     }
 
-    if (!this.focusedFieldMatchesFillType(CipherType.Login)) {
+    if (!this.focusedFieldMatchesFillType(CipherTypes.Login)) {
       return false;
     }
 
@@ -1149,7 +1151,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     }
 
     let pageDetails = Array.from(pageDetailsForTab.values());
-    if (this.focusedFieldMatchesFillType(InlineMenuFillType.CurrentPasswordUpdate)) {
+    if (this.focusedFieldMatchesFillType(InlineMenuFillTypes.CurrentPasswordUpdate)) {
       pageDetails = this.getFilteredPageDetails(
         pageDetails,
         this.inlineMenuFieldQualificationService.isUpdateCurrentPasswordField,
@@ -1682,7 +1684,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       )
     ) {
       const updateAllCipherTypes = !this.focusedFieldMatchesFillType(
-        CipherType.Login,
+        CipherTypes.Login,
         focusedFieldData,
       );
       this.updateOverlayCiphers(updateAllCipherTypes).catch((error) =>
@@ -1697,7 +1699,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
   private shouldUpdatePasswordGeneratorMenuOnFieldFocus() {
     return (
       this.isInlineMenuButtonVisible &&
-      this.focusedFieldMatchesFillType(InlineMenuFillType.PasswordGeneration)
+      this.focusedFieldMatchesFillType(InlineMenuFillTypes.PasswordGeneration)
     );
   }
 
@@ -1740,7 +1742,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     }
 
     if (
-      this.focusedFieldMatchesFillType(CipherType.Login) &&
+      this.focusedFieldMatchesFillType(CipherTypes.Login) &&
       this.focusedFieldMatchesAccountCreationType(InlineMenuAccountCreationFieldType.Password)
     ) {
       await this.updateGeneratedPassword();
@@ -1759,9 +1761,9 @@ export class OverlayBackground implements OverlayBackgroundInterface {
   private shouldUpdateAccountCreationMenuOnFieldFocus(previousFocusedFieldData: FocusedFieldData) {
     const accountCreationFieldBlurred =
       this.focusedFieldMatchesFillType(
-        InlineMenuFillType.AccountCreationUsername,
+        InlineMenuFillTypes.AccountCreationUsername,
         previousFocusedFieldData,
-      ) && !this.focusedFieldMatchesFillType(InlineMenuFillType.AccountCreationUsername);
+      ) && !this.focusedFieldMatchesFillType(InlineMenuFillTypes.AccountCreationUsername);
     return accountCreationFieldBlurred || this.shouldShowInlineMenuAccountCreation();
   }
 
@@ -1821,7 +1823,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
 
     // If our currently focused field is for a login form, we want to fill the current password field.
     // Otherwise, map over all page details and filter out fields that are not new password fields.
-    if (!this.focusedFieldMatchesFillType(CipherType.Login)) {
+    if (!this.focusedFieldMatchesFillType(CipherTypes.Login)) {
       pageDetails = this.getFilteredPageDetails(
         pageDetails,
         this.inlineMenuFieldQualificationService.isNewPasswordField,
@@ -1868,7 +1870,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
 
     return (
       (this.shouldShowInlineMenuAccountCreation() ||
-        this.focusedFieldMatchesFillType(InlineMenuFillType.PasswordGeneration)) &&
+        this.focusedFieldMatchesFillType(InlineMenuFillTypes.PasswordGeneration)) &&
       !!(loginData.password || loginData.newPassword)
     );
   }
@@ -2265,21 +2267,21 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    * Identifies if the current add new item data is for adding a new login.
    */
   private isAddingNewLogin() {
-    return this.currentAddNewItemData.addNewCipherType === CipherType.Login;
+    return this.currentAddNewItemData.addNewCipherType === CipherTypes.Login;
   }
 
   /**
    * Identifies if the current add new item data is for adding a new card.
    */
   private isAddingNewCard() {
-    return this.currentAddNewItemData.addNewCipherType === CipherType.Card;
+    return this.currentAddNewItemData.addNewCipherType === CipherTypes.Card;
   }
 
   /**
    * Identifies if the current add new item data is for adding a new identity.
    */
   private isAddingNewIdentity() {
-    return this.currentAddNewItemData.addNewCipherType === CipherType.Identity;
+    return this.currentAddNewItemData.addNewCipherType === CipherTypes.Identity;
   }
 
   /**
@@ -2479,7 +2481,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     const cipherView = new CipherView();
     cipherView.name = (Utils.getHostname(login.uri) || login.hostname).replace(/^www\./, "");
     cipherView.folderId = null;
-    cipherView.type = CipherType.Login;
+    cipherView.type = CipherTypes.Login;
     cipherView.login = loginView;
 
     return cipherView;
@@ -2512,7 +2514,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     const cipherView = new CipherView();
     cipherView.name = "";
     cipherView.folderId = null;
-    cipherView.type = CipherType.Card;
+    cipherView.type = CipherTypes.Card;
     cipherView.card = cardView;
 
     return cipherView;
@@ -2548,7 +2550,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     const cipherView = new CipherView();
     cipherView.name = "";
     cipherView.folderId = null;
-    cipherView.type = CipherType.Identity;
+    cipherView.type = CipherTypes.Identity;
     cipherView.identity = identityView;
 
     return cipherView;
@@ -3028,7 +3030,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     }
 
     const focusFieldShouldShowPasswordGenerator =
-      this.focusedFieldMatchesFillType(InlineMenuFillType.PasswordGeneration) ||
+      this.focusedFieldMatchesFillType(InlineMenuFillTypes.PasswordGeneration) ||
       (showInlineMenuAccountCreation &&
         this.focusedFieldMatchesAccountCreationType(InlineMenuAccountCreationFieldType.Password));
     if (!focusFieldShouldShowPasswordGenerator) {
