@@ -16,7 +16,10 @@ import {
 } from "@bitwarden/common/autofill/constants";
 import { DomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
 import { UserNotificationSettingsServiceAbstraction } from "@bitwarden/common/autofill/services/user-notification-settings.service";
-import { ProductTierType } from "@bitwarden/common/billing/enums/product-tier-type.enum";
+import {
+  ProductTierTypes,
+  ProductTierTypeValue,
+} from "@bitwarden/common/billing/enums/product-tier-type.enum";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { NeverDomains } from "@bitwarden/common/models/domain/domain-service";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
@@ -193,13 +196,21 @@ export default class NotificationBackground {
       const organizationCategories: OrganizationCategory[] = [];
 
       if (
-        [ProductTierType.Teams, ProductTierType.Enterprise, ProductTierType.TeamsStarter].includes(
-          organizationType,
-        )
+        (
+          [
+            ProductTierTypes.Teams,
+            ProductTierTypes.Enterprise,
+            ProductTierTypes.TeamsStarter,
+          ] as ProductTierTypeValue[]
+        ).includes(organizationType)
       ) {
         organizationCategories.push(OrganizationCategories.business);
       }
-      if ([ProductTierType.Families, ProductTierType.Free].includes(organizationType)) {
+      if (
+        ([ProductTierTypes.Families, ProductTierTypes.Free] as ProductTierTypeValue[]).includes(
+          organizationType,
+        )
+      ) {
         organizationCategories.push(OrganizationCategories.family);
       }
 
