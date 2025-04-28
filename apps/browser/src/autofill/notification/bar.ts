@@ -9,6 +9,7 @@ import { NotificationCipherData } from "../content/components/cipher/types";
 import { CollectionView, OrgView } from "../content/components/common-types";
 import { NotificationConfirmationContainer } from "../content/components/notification/confirmation/container";
 import { NotificationContainer } from "../content/components/notification/container";
+import { selectedCollection as selectedCollectionSignal } from "../content/components/signals/selected-collection";
 import { selectedFolder as selectedFolderSignal } from "../content/components/signals/selected-folder";
 import { selectedVault as selectedVaultSignal } from "../content/components/signals/selected-vault";
 import { buildSvgDomElement } from "../utils";
@@ -267,12 +268,14 @@ function handleCloseNotification(e: Event) {
 }
 
 function handleSaveAction(e: Event) {
+  const selectedCollection = selectedCollectionSignal.get();
   const selectedVault = selectedVaultSignal.get();
   const selectedFolder = selectedFolderSignal.get();
 
   if (selectedVault.length > 1) {
     openAddEditVaultItemPopout(e, {
       organizationId: selectedVault,
+      collectionIds: [selectedCollection],
       folder: selectedFolder,
     });
     handleCloseNotification(e);
@@ -380,6 +383,7 @@ function openAddEditVaultItemPopout(
   e: Event,
   options: {
     cipherId?: string;
+    collectionIds?: string[];
     organizationId?: string;
     folder?: string;
   },

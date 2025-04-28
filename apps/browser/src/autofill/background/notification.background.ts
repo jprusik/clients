@@ -801,7 +801,8 @@ export default class NotificationBackground {
     message: NotificationBackgroundExtensionMessage,
     senderTab: chrome.tabs.Tab,
   ) {
-    const { cipherId, organizationId, folder } = message;
+    const { cipherId, collectionIds, organizationId, folder } = message;
+    // console.log(' collectionIds:', collectionIds);
     const userId = await firstValueFrom(this.accountService.activeAccount$.pipe(getOptionalUserId));
     if (cipherId) {
       await this.openAddEditVaultItemPopout(senderTab, { cipherId });
@@ -814,6 +815,7 @@ export default class NotificationBackground {
       const cipherView = this.convertAddLoginQueueMessageToCipherView(queueItem);
       cipherView.organizationId = organizationId;
       cipherView.folderId = folder;
+      cipherView.collectionIds = collectionIds;
 
       if (userId) {
         await this.cipherService.setAddEditCipherInfo({ cipher: cipherView }, userId);
@@ -926,8 +928,10 @@ export default class NotificationBackground {
   private async getCollectionData(
     message: NotificationBackgroundExtensionMessage,
   ): Promise<CollectionView[]> {
+          // console.log(' message?.orgId:', message?.orgId);
     const collections = (await this.collectionService.getAllDecrypted()).reduce<CollectionView[]>(
       (acc, collection) => {
+        // console.log(' collection:', collection);
         if (collection.organizationId === message?.orgId) {
           acc.push({
             id: collection.id,

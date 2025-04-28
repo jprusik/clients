@@ -119,6 +119,20 @@ export function NotificationButtonRow({
     }
   }
 
+  function handleVaultSelection(selectedOrgId: string) {
+    console.log(' selectedOrgId:', selectedOrgId);
+    const selectedCollectionId = selectedCollectionSignal.get();
+    console.log(' selectedCollectionId:', selectedCollectionId);
+    const selectedCollection = collections?.find(({ id }) => selectedCollectionId === id);
+    console.log(' selectedCollection:', selectedCollection);
+
+    // If the currently selected collection doesn't belong to the org
+    // that was just selected, reset collection selection
+    if (selectedCollection?.organizationId !== selectedOrgId) {
+      selectedCollectionSignal?.set(defaultNoneSelectValue);
+    }
+  }
+
   return html`
     ${ButtonRow({
       theme,
@@ -131,6 +145,7 @@ export function NotificationButtonRow({
                 label: i18n.vault,
                 options: vaultOptions,
                 selectedSignal: selectedVaultSignal,
+                handleSelectionUpdate: handleVaultSelection,
               },
             ]
           : []),
