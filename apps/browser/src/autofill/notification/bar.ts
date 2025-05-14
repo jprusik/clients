@@ -146,6 +146,11 @@ async function initNotificationBar(message: NotificationBarWindowMessage) {
   const resolvedTheme = getResolvedTheme(theme ?? ThemeTypes.Light);
 
   if (useComponentBar) {
+    if (isVaultLocked) {
+      sendSaveCipherMessage(false);
+      return;
+    }
+
     document.body.innerHTML = "";
     // Current implementations utilize a require for scss files which creates the need to remove the node.
     document.head.querySelectorAll('link[rel="stylesheet"]').forEach((node) => node.remove());
