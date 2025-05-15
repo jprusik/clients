@@ -106,7 +106,7 @@ function getHeaderMessage(i18n: I18n, type?: NotificationType) {
     case NotificationTypes.Change:
       return i18n.updateLogin;
     case NotificationTypes.Unlock:
-      return "";
+      return i18n.unlockToSave;
     default:
       return undefined;
   }

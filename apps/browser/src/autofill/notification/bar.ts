@@ -85,6 +85,7 @@ function getI18n() {
     saveFailureDetails: chrome.i18n.getMessage("saveFailureDetails"),
     saveLogin: chrome.i18n.getMessage("saveLogin"),
     typeLogin: chrome.i18n.getMessage("typeLogin"),
+    unlockToSave: chrome.i18n.getMessage("unlockToSave"),
     updateLoginAction: chrome.i18n.getMessage("updateLoginAction"),
     updateLogin: chrome.i18n.getMessage("updateLogin"),
     vault: chrome.i18n.getMessage("vault"),
