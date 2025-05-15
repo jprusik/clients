@@ -1117,7 +1117,7 @@
     "description": "Button text for updating an existing login entry."
   },
   "unlockToSave": {
-    "message": "Unlock your vault to save this login",
+    "message": "Unlock to save this login",
     "description": "User prompt to take action in order to save the login they just entered."
   },
   "saveLogin": {
