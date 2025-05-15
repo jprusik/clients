@@ -19,6 +19,7 @@ import {
   NotificationBarWindowMessage,
   NotificationBarIframeInitData,
   NotificationType,
+  NotificationTypes,
 } from "./abstractions/notification-bar";
 
 const logService = new ConsoleLogService(false);
@@ -147,14 +148,30 @@ async function initNotificationBar(message: NotificationBarWindowMessage) {
   const resolvedTheme = getResolvedTheme(theme ?? ThemeTypes.Light);
 
   if (useComponentBar) {
-    if (isVaultLocked) {
-      sendSaveCipherMessage(false);
-      return;
-    }
-
     document.body.innerHTML = "";
     // Current implementations utilize a require for scss files which creates the need to remove the node.
     document.head.querySelectorAll('link[rel="stylesheet"]').forEach((node) => node.remove());
+
+    if (isVaultLocked) {
+      return render(
+        NotificationContainer({
+          ...notificationBarIframeInitData,
+          type: NotificationTypes.Unlock,
+          theme: resolvedTheme,
+          personalVaultIsAllowed: !personalVaultDisallowed,
+          handleCloseNotification,
+          handleSaveAction: (e) => {
+            sendSaveCipherMessage(true);
+
+            // @TODO can't close before vault has finished decrypting, but can't leave open during long decrypt because it looks like the experience has failed
+          },
+          handleEditOrUpdateAction,
+          i18n,
+        }),
+        document.body,
+      );
+    }
+
     const orgId = selectedVaultSignal.get();
     await Promise.all([
       new Promise<OrgView[]>((resolve) =>
