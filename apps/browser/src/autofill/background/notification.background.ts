@@ -551,6 +551,10 @@ export default class NotificationBackground {
     }
 
     if (notificationRefreshFlagEnabled) {
+      // instead open unlock
+      console.log('should open popout');
+      // await this.openUnlockPopout(tab);
+
       return;
     }
 

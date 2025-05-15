@@ -8,6 +8,7 @@ import { border, themes, typography, spacing } from "../constants/styles";
 export type ActionButtonProps = {
   buttonText: string | TemplateResult;
   disabled?: boolean;
+  isLoading?: boolean;
   theme: Theme;
   handleClick: (e: Event) => void;
 };
@@ -15,18 +16,19 @@ export type ActionButtonProps = {
 export function ActionButton({
   buttonText,
   disabled = false,
+  isLoading = false,
   theme,
   handleClick,
 }: ActionButtonProps) {
   const handleButtonClick = (event: Event) => {
-    if (!disabled) {
+    if (!disabled && !isLoading) {
       handleClick(event);
     }
   };
 
   return html`
     <button
-      class=${actionButtonStyles({ disabled, theme })}
+      class=${actionButtonStyles({ disabled, isLoading, theme })}
       title=${buttonText}
       type="button"
       @click=${handleButtonClick}
@@ -36,7 +38,7 @@ export function ActionButton({
   `;
 }
 
-const actionButtonStyles = ({ disabled, theme }: { disabled: boolean; theme: Theme }) => css`
+const actionButtonStyles = ({ disabled, isLoading, theme }: { disabled: boolean; isLoading: boolean; theme: Theme }) => css`
   ${typography.body2}
 
   user-select: none;
@@ -49,7 +51,7 @@ const actionButtonStyles = ({ disabled, theme }: { disabled: boolean; theme: The
   text-overflow: ellipsis;
   font-weight: 700;
 
-  ${disabled
+  ${disabled || isLoading
     ? `
     background-color: ${themes[theme].secondary["300"]};
     color: ${themes[theme].text.muted};

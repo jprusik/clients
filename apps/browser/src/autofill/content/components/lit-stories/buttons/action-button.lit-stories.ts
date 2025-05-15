@@ -15,6 +15,7 @@ export default {
   args: {
     buttonText: "Click Me",
     disabled: false,
+    isLoading: false,
     theme: ThemeTypes.Light,
     handleClick: () => alert("Clicked"),
   },
