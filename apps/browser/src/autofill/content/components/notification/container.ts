@@ -1,5 +1,5 @@
 import { css } from "@emotion/css";
-import { html } from "lit";
+import { html, nothing } from "lit";
 
 import { Theme, ThemeTypes } from "@bitwarden/common/platform/enums";
 
@@ -47,14 +47,13 @@ export function NotificationContainer({
   type,
 }: NotificationContainerProps) {
   const headerMessage = getHeaderMessage(i18n, type);
-  const showBody = true;
+  const showBody = type !== NotificationTypes.Unlock;
 
   return html`
     <div class=${notificationContainerStyles(theme)}>
       ${NotificationHeader({
         handleCloseNotification,
         message: headerMessage,
-        standalone: showBody,
         theme,
       })}
       ${showBody
@@ -65,7 +64,7 @@ export function NotificationContainer({
             theme,
             i18n,
           })
-        : null}
+        : nothing}
       ${NotificationFooter({
         handleSaveAction,
         collections,
