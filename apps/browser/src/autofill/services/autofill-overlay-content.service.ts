@@ -547,6 +547,7 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
     selector: string,
     treeWalkerFilter: CallableFunction,
   ) {
+    // console.log('🚀 🚀 AutofillOverlayContentService 🚀 querySubmitButtonElement:');
     const submitButtonElements = this.domQueryService.query<HTMLButtonElement>(
       element,
       selector,

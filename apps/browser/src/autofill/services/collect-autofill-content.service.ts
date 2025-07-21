@@ -35,6 +35,15 @@ import {
 import { DomElementVisibilityService } from "./abstractions/dom-element-visibility.service";
 import { DomQueryService } from "./abstractions/dom-query.service";
 
+// Represents the size the queue should be trimmed to in order to restore page performance.
+const MAX_PERFORMANT_MUTATION_QUEUE_LENGTH = 3;
+
+// Represents how many times the queue can exceed the threshold before it is trimmed
+const MAX_MUTATION_QUEUE_THRESHOLD_OVERAGE_COUNT = 0;
+
+// @TODO Is this actually set anywhere anymore? We might just remove this as it has potential for abuse.
+const BW_IGNORE_ATTRIBUTE_NAME = "data-bwignore";
+
 export class CollectAutofillContentService implements CollectAutofillContentServiceInterface {
   private readonly sendExtensionMessage = sendExtensionMessage;
   private readonly getAttributeBoolean = getAttributeBoolean;
@@ -48,10 +57,13 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
   private elementInitializingIntersectionObserver: Set<Element> = new Set();
   private mutationObserver: MutationObserver;
   private mutationsQueue: MutationRecord[][] = [];
+  private autofillFieldMutations: Set<Node> = new Set();
+  private autofillFieldMutationsLastUpdated = new Date();
   private updateAfterMutationIdleCallback: NodeJS.Timeout | number;
   private readonly updateAfterMutationTimeout = 1000;
   private readonly formFieldQueryString;
-  private readonly nonInputFormFieldTags = new Set(["textarea", "select"]);
+  // @TODO possible perf improvement here; enumerating additional nodes we don't care about (e.g. textNodes), may reduce the number of mutations we have to process
+  private readonly nonInputFormFieldTags = new Set(["textarea", "select", "text"]);
   private readonly ignoredInputTypes = new Set([
     "hidden",
     "submit",
@@ -59,18 +71,20 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
     "button",
     "image",
     "file",
+    // @TODO why not include?: "search", "url", "date", "time", "month", "week", "datetime-local", "datetime", "color", "range", "radio", "reset", "checkbox"
   ]);
+  private consecutiveMutationQueueThresholdOverageCount = 0;
 
   constructor(
     private domElementVisibilityService: DomElementVisibilityService,
     private domQueryService: DomQueryService,
     private autofillOverlayContentService?: AutofillOverlayContentService,
   ) {
-    let inputQuery = "input:not([data-bwignore])";
+    let inputQuery = `input:not([${BW_IGNORE_ATTRIBUTE_NAME}])`;
     for (const type of this.ignoredInputTypes) {
       inputQuery += `:not([type="${type}"])`;
     }
-    this.formFieldQueryString = `${inputQuery}, textarea:not([data-bwignore]), select:not([data-bwignore]), span[data-bwautofill]`;
+    this.formFieldQueryString = `${inputQuery}, textarea:not([${BW_IGNORE_ATTRIBUTE_NAME}]), select:not([${BW_IGNORE_ATTRIBUTE_NAME}]), span[data-bwautofill]`;
   }
 
   get autofillFormElements(): AutofillFormElements {
@@ -85,6 +99,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
    * @public
    */
   async getPageDetails(): Promise<AutofillPageDetails> {
+    console.log('getPageDetails called');
     if (!this.mutationObserver) {
       this.setupMutationObserver();
     }
@@ -293,6 +308,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
     fieldsLimit?: number,
     previouslyFoundFormFieldElements?: FormFieldElement[],
   ): FormFieldElement[] {
+    // console.log('🚀 🚀 CollectAutofillContentService 🚀 getAutofillFieldElements:');
     let formFieldElements = previouslyFoundFormFieldElements;
     if (!formFieldElements) {
       formFieldElements = this.domQueryService.query<FormFieldElement>(
@@ -435,6 +451,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
     element: ElementWithOpId<FormFieldElement>,
     autofillFieldData: AutofillField,
   ) {
+    // console.log('autofillFieldElements', this.autofillFieldElements);
     if (index < 0) {
       return;
     }
@@ -849,6 +866,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
     formElements: HTMLFormElement[];
     formFieldElements: FormFieldElement[];
   } {
+    // console.log('queryAutofillFormAndFieldElements')
     const formElements: HTMLFormElement[] = [];
     const formFieldElements: FormFieldElement[] = [];
 
@@ -909,7 +927,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
       return true;
     }
 
-    const nodeHasBwIgnoreAttribute = node.hasAttribute("data-bwignore");
+    const nodeHasBwIgnoreAttribute = node.hasAttribute(BW_IGNORE_ATTRIBUTE_NAME);
     const nodeIsValidInputElement =
       nodeTagName === "input" && !this.ignoredInputTypes.has((node as HTMLInputElement).type);
     if (nodeIsValidInputElement && !nodeHasBwIgnoreAttribute) {
@@ -927,8 +945,11 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
   private setupMutationObserver() {
     this.currentLocationHref = globalThis.location.href;
     this.mutationObserver = new MutationObserver(this.handleMutationObserverMutation);
+    console.log('🚀 🚀 CollectAutofillContentService 🚀 setupMutationObserver 🚀 mutationObserver',);
+    // @TODO possible perf improvement here; enumerating the tag attributes we care about (with `attributeFilter`) limits the number of mutations we have to track and process (but also requires knowing to come here if you need to start observing a new attribute for mutations)
     this.mutationObserver.observe(document.documentElement, {
       attributes: true,
+      characterData: false, // @TODO I'm still not sure if this is doing what I thought it was doing
       childList: true,
       subtree: true,
     });
@@ -980,26 +1001,69 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
    * within an idle callback to help with performance and prevent excessive updates.
    */
   private processMutations = () => {
-    const queueLength = this.mutationsQueue.length;
+    // copy queue state for processing within scope
+    const ephemeralQueue = this.mutationsQueue;
+
+    // reset the queue state to prevent processing the same mutations again and avoid clearing accumulated mutations during processing
+    this.mutationsQueue = [];
+
+    const queueLength = ephemeralQueue.length;
+    // console.log('🚀 consecutiveQueueThresholdOverageCount:', this.consecutiveMutationQueueThresholdOverageCount);
+    // console.log('🚀 mutationQueueLength:', queueLength);
 
     if (!this.domQueryService.pageContainsShadowDomElements()) {
       this.checkPageContainsShadowDom();
     }
 
-    for (let queueIndex = 0; queueIndex < queueLength; queueIndex++) {
-      const mutations = this.mutationsQueue[queueIndex];
-      const processMutationRecords = () => {
-        this.processMutationRecords(mutations);
-
-        if (queueIndex === queueLength - 1 && this.domRecentlyMutated) {
-          this.updateAutofillElementsAfterMutation();
-        }
-      };
-
-      requestIdleCallbackPolyfill(processMutationRecords, { timeout: 500 });
+    /*
+    // If the queue length exceeds the threshold, check consecutive threshold overage count
+    if (queueLength > MAX_PERFORMANT_MUTATION_QUEUE_LENGTH) {
+      // If the queue length exceeds the maximum threshold more than x times in a row,
+      // slice the queue down to the maximum performant length to restore page performance.
+      if (this.consecutiveMutationQueueThresholdOverageCount >= MAX_MUTATION_QUEUE_THRESHOLD_OVERAGE_COUNT) {
+        this.mutationsQueue = MAX_PERFORMANT_MUTATION_QUEUE_LENGTH ? this.mutationsQueue.slice(-MAX_PERFORMANT_MUTATION_QUEUE_LENGTH) : [];
+        this.consecutiveMutationQueueThresholdOverageCount = 0;
+        queueLength = this.mutationsQueue.length;
+        // console.log('🚀🚀 Clearing the queue! New length is', queueLength);
+      } else {
+        this.consecutiveMutationQueueThresholdOverageCount++;
+      }
+    } else {
+      this.consecutiveMutationQueueThresholdOverageCount = 0;
     }
 
-    this.mutationsQueue = [];
+*/
+    for (let queueIndex = 0; queueIndex < queueLength; queueIndex++) {
+      const mutations = ephemeralQueue[queueIndex];
+
+      // processMutationRecords
+      for (let mutationIndex = 0; mutationIndex < mutations.length; mutationIndex++) {
+        const mutation: MutationRecord = mutations[mutationIndex];
+        this.newProcessMutationRecord(mutation);
+      }
+
+      // const processMutationRecordsCallback = () => {
+      //   this.processMutationRecords(mutations);
+
+        if (queueIndex === queueLength - 1 && this.domRecentlyMutated) {
+          // this.updateAutofillElementsAfterMutation();
+        }
+      // };
+
+      // requestIdleCallbackPolyfill(processMutationRecordsCallback, { timeout: 500 });
+    }
+
+    const qualifiedMutationsEffects = () => {
+
+      if (this.autofillOverlayContentService) {
+        // @TODO temp conversion
+        const targetNodes = Array.from(this.autofillFieldMutations.values());
+        this.autofillFieldMutations = new Set<Node>();
+
+        this.setupOverlayListenersOnMutatedElements(targetNodes);
+      }
+    }
+    requestIdleCallbackPolyfill(qualifiedMutationsEffects, { timeout: 500 });
   };
 
   /**
@@ -1045,24 +1109,56 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
    */
   private newProcessMutationRecord(mutation: MutationRecord) {
     if (mutation.type === "childList") {
-      const removedAutofillElementNodes = this.getMutatedAutofillElements(mutation.removedNodes);
+      // console.log(
+      //   "🚀 🚀 CollectAutofillContentService 🚀 newProcessMutationRecord 🚀 mutation:",
+      //   mutation,
+      // );
 
-      for (const elementNode of removedAutofillElementNodes) {
-        this.deleteCachedAutofillElement(
-          elementNode as ElementWithOpId<HTMLFormElement> | ElementWithOpId<FormFieldElement>,
-        );
-      }
-
+      // Using Sets to avoid duplicates
       const addedAutofillElementNodes = this.getMutatedAutofillElements(mutation.addedNodes);
 
-      if (addedAutofillElementNodes.size && this.autofillOverlayContentService) {
-        this.setupOverlayListenersOnMutatedElements(
-          // @TODO temp conversion
-          Array.from(addedAutofillElementNodes.values()),
-        );
-      }
+      addedAutofillElementNodes.forEach(node => this.autofillFieldMutations.add(node));
 
-      if (removedAutofillElementNodes.size || addedAutofillElementNodes.size) {
+      // ~If we can clear the entire list, we maybe don't need to know _which_ nodes were removed, and thus, skip the query entirely~ Nvm, we need to keep the listeners on existing elements that haven't changed
+      // Do we need to query the removed nodes? Can we just try to tear down the listeners, and swallow failures?
+      // const removedAutofillElementNodes = this.getMutatedAutofillElements(mutation.removedNodes);
+
+      mutation.removedNodes.forEach(node => {
+        this.autofillFieldMutations.delete(node);
+        this.deleteCachedAutofillElement(
+          node as ElementWithOpId<HTMLFormElement> | ElementWithOpId<FormFieldElement>,
+        );
+      });
+
+
+
+      // Alternatively, if we can't nuke everything:
+      /*
+      removedAutofillElementNodes.forEach(node => {
+        this.autofillFieldMutations.delete(node);
+        this.deleteCachedAutofillElement(
+          node as ElementWithOpId<HTMLFormElement> | ElementWithOpId<FormFieldElement>,
+        );
+      });
+      */
+
+      // @TODO debounce cache update
+      // for (const elementNode of removedAutofillElementNodes) {
+        // this.deleteCachedAutofillElement(
+        //   elementNode as ElementWithOpId<HTMLFormElement> | ElementWithOpId<FormFieldElement>,
+        // );
+      // }
+
+
+
+      // if (addedAutofillElementNodes.size && this.autofillOverlayContentService) {
+      //   this.setupOverlayListenersOnMutatedElements(
+      //     // @TODO temp conversion
+      //     Array.from(addedAutofillElementNodes.values())
+      //   );
+      // }
+
+      if (mutation.removedNodes.length || addedAutofillElementNodes.size) {
         this.flagPageDetailsUpdateIsRequired();
       }
 
@@ -1074,21 +1170,22 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
     }
   }
 
+  // @TODO right now, this method assumes received nodes are unique from each other (which will be true with the current batching system), but if we switch `mutatedAutofillElements` to be a Set instead of an array, we can do a performant lookup for a potential early exit. This would allow us to process combined batches with potential dupes. This in turn would allow for deferred batch accumulation (debouncing) to avoid clovering the DOM renders where there are lots of constant updates. Note, this looses order in the process, but that is no longer a concern (and maybe never was here) with the new processing strategy.
   private getMutatedAutofillElements(nodes: NodeList): Set<Node> {
-    let mutatedAutofillElements: HTMLElement[] = [];
+    const mutatedAutofillElements = new Set<Node>();
 
     if (!nodes.length) {
-      return new Set<Node>(mutatedAutofillElements);
+      return mutatedAutofillElements;
     }
 
     for (let index = 0; index < nodes.length; index++) {
       const node = nodes[index];
-      if (!nodeIsElement(node)) {
+      if (!nodeIsElement(node) || mutatedAutofillElements.has(node)) {
         continue;
       }
 
       if (nodeIsFormElement(node) || this.isNodeFormFieldElement(node)) {
-        mutatedAutofillElements = [...mutatedAutofillElements, node as HTMLElement];
+        mutatedAutofillElements.add(node);
       }
 
       const autofillElements = this.domQueryService.query<HTMLElement>(
@@ -1101,15 +1198,14 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
       );
 
       if (autofillElements.length) {
-        mutatedAutofillElements = [...mutatedAutofillElements, ...autofillElements];
+        autofillElements.forEach(node => {mutatedAutofillElements.add(node)})
       }
     }
 
-    return new Set<Node>(mutatedAutofillElements);
+    return mutatedAutofillElements;
   }
 
   /**
-   * @deprecated Use {@link newProcessMutationRecord} and handle desired side-effects as a separate concern
    * Processes a single mutation record and updates the autofill elements if necessary.
    * @param mutation
    * @private
@@ -1193,6 +1289,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
    * @param mutatedElements - HTML elements that have been mutated
    */
   private setupOverlayListenersOnMutatedElements(mutatedElements: Node[]) {
+    console.log('🚀 🚀 CollectAutofillContentService 🚀 setupOverlayListenersOnMutatedElements', mutatedElements.length);
     for (let elementIndex = 0; elementIndex < mutatedElements.length; elementIndex++) {
       const node = mutatedElements[elementIndex];
       const buildAutofillFieldItemCallback = () => {
@@ -1221,6 +1318,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
   private deleteCachedAutofillElement(
     element: ElementWithOpId<HTMLFormElement> | ElementWithOpId<FormFieldElement>,
   ) {
+    console.log('🚀 🚀 CollectAutofillContentService 🚀 deleteCachedAutofillElement');
     if (elementIsFormElement(element) && this._autofillFormElements.has(element)) {
       this._autofillFormElements.delete(element);
       return;
@@ -1444,10 +1542,13 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
    * @param pageDetails - The page details to use for the inline menu listeners
    */
   private setupOverlayListeners(pageDetails: AutofillPageDetails) {
+      console.log('🚀 🚀 CollectAutofillContentService 🚀 setupOverlayListeners 🚀 setupOverlayListeners');
     if (this.autofillOverlayContentService) {
+      // @TODO because this is iterating over state, debouncing this iteration for rapid state updates may help avoid unneeded iterations
       this.autofillFieldElements.forEach((autofillField, formFieldElement) => {
         this.setupOverlayOnField(formFieldElement, autofillField, pageDetails);
       });
+
     }
   }
 

@@ -1,6 +1,6 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { EVENTS, MAX_DEEP_QUERY_RECURSION_DEPTH } from "@bitwarden/common/autofill/constants";
+import { DOM_QUERY_DEBOUNCE_MS, EVENTS, MAX_DEEP_QUERY_RECURSION_DEPTH } from "@bitwarden/common/autofill/constants";
 
 import { nodeIsElement, sendExtensionMessage } from "../utils";
 
@@ -30,9 +30,32 @@ export class DomQueryService implements DomQueryServiceInterface {
     "map",
     "area",
   ]);
+  private debouncedQueries: any = {};
+  private queryResults: any = {};
+  private lastQueryCalledAt: number = 0;
 
   constructor() {
     void this.init();
+  }
+
+  debouncedQuery<T>(
+    root: Document | ShadowRoot | Element,
+    queryString: string,
+    treeWalkerFilter: CallableFunction,
+    mutationObserver?: MutationObserver,
+    forceDeepQueryAttempt?: boolean,
+    ignoredTreeWalkerNodesOverride?: Set<string>,
+  ): NodeJS.Timeout {
+    return setTimeout((): T[] =>
+      this.query(
+        root,
+        queryString,
+        treeWalkerFilter,
+        mutationObserver,
+        forceDeepQueryAttempt,
+        ignoredTreeWalkerNodesOverride,
+      )
+    , DOM_QUERY_DEBOUNCE_MS);
   }
 
   /**
@@ -54,6 +77,9 @@ export class DomQueryService implements DomQueryServiceInterface {
     forceDeepQueryAttempt?: boolean,
     ignoredTreeWalkerNodesOverride?: Set<string>,
   ): T[] {
+    // console.log ('last called:', Date.now() - this.lastQueryCalledAt, 'ms ago');
+    this.lastQueryCalledAt = Date.now();
+    // console.log('🚀 🚀 DomQueryService 🚀 query');
     const ignoredTreeWalkerNodes = ignoredTreeWalkerNodesOverride || this.ignoredTreeWalkerNodes;
 
     if (!forceDeepQueryAttempt && this.pageContainsShadowDomElements()) {
@@ -101,6 +127,7 @@ export class DomQueryService implements DomQueryServiceInterface {
     if (useTreeWalkerStrategyFlag && typeof useTreeWalkerStrategyFlag.result === "boolean") {
       this.useTreeWalkerStrategyFlagSet = useTreeWalkerStrategyFlag.result;
     }
+    // console.log('🚀 🚀 DomQueryService 🚀 init 🚀 useTreeWalkerStrategyFlag:', useTreeWalkerStrategyFlag);
 
     if (globalThis.document.readyState === "complete") {
       this.checkPageContainsShadowDom();
@@ -148,6 +175,7 @@ export class DomQueryService implements DomQueryServiceInterface {
    * @param queryString - The query string to match elements against
    */
   private queryElements<T>(root: Document | ShadowRoot | Element, queryString: string): T[] {
+    // Run this check first to potentially avoid expensive perf impact of querySelectorAll
     if (!root.querySelector(queryString)) {
       return [];
     }
@@ -194,6 +222,7 @@ export class DomQueryService implements DomQueryServiceInterface {
     root: Document | ShadowRoot | Element,
     returnSingleShadowRoot = false,
   ): ShadowRoot[] {
+    // console.log('🚀 🚀 DomQueryService 🚀 queryShadowRoots:', root);
     if (!root) {
       return [];
     }

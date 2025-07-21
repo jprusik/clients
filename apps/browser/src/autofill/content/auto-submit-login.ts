@@ -229,6 +229,7 @@ import {
     selector: string,
     treeWalkerFilter: CallableFunction,
   ) {
+    // console.log('🚀 🚀 querySubmitButtonElement');
     const submitButtonElements = domQueryService.query<HTMLButtonElement>(
       element,
       selector,
@@ -290,6 +291,7 @@ import {
    * Gets all form elements on the page.
    */
   function getAutofillFormElements(): HTMLFormElement[] {
+    // console.log('🚀 🚀 getAutofillFormElements 🚀 getAutofillFormElements:');
     return domQueryService.query<HTMLFormElement>(
       globalContext.document.documentElement,
       "form",
