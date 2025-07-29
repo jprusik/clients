@@ -36,7 +36,7 @@ jobs:
       uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
       with:
         script: |
-          github.rest.actions.createWorkflowDispatch({
+          console.log({
             owner: context.repo.owner,
             repo: "browser-interactions-testing",
             workflow_id: "test-all.yml",
@@ -47,4 +47,4 @@ jobs:
             body: {
               "event_type": "trigger-workflow",
             }
-          });
+          })
