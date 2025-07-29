@@ -3,7 +3,7 @@ name: Autofill BIT checks
 on:
   workflow_run:
     workflows: ["Build Browser"]
-    branches: [main]
+    # branches: [main]
     types:
       - completed
 
