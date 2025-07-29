@@ -36,12 +36,29 @@ jobs:
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
+          console.log('🚀 🚀 context:', context);
+          console.log('🚀 🚀 event:', github.event);
+          console.log({
+            owner: context.repo.owner,
+            repo: "browser-interactions-testing",
+            workflow_id: "test-all.yml",
+            inputs: {
+              origin_branch: context.workflow_run.head_branch,
+              origin_pr: context.workflow_run.pull_requests,
+              origin_issue: context.issue,
+              origin_repo: context.repo
+            },
+            body: {
+              "event_type": "trigger-workflow",
+            }
+          })
+
           github.rest.actions.createWorkflowDispatch({
             owner: context.repo.owner,
             repo: "browser-interactions-testing",
             workflow_id: "test-all.yml",
             inputs: {
-              origin_branch: context.workflow_run.head_branch
+              origin_branch: context.workflow_run.head_branch,
               origin_issues: context.workflow_run.pull_requests,
             },
             body: {
