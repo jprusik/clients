@@ -35,7 +35,15 @@ import {
 import { DomElementVisibilityService } from "./abstractions/dom-element-visibility.service";
 import { DomQueryService } from "./abstractions/dom-query.service";
 
-const useNewMutationProcessingStrategy = false;
+// Represents the size the queue should be trimmed to in order to restore page performance.
+const MAX_PERFORMANT_MUTATION_QUEUE_LENGTH = 3;
+
+// Represents how many times the queue can exceed the threshold before it is trimmed
+const MAX_MUTATION_QUEUE_THRESHOLD_OVERAGE_COUNT = 0;
+
+const useNewMutationProcessingStrategy = true;
+
+const useNewAutofillFieldElementsCache = true;
 
 // @TODO Is this actually set anywhere anymore? We might just remove this as it has potential for abuse.
 const BW_IGNORE_ATTRIBUTE_NAME = "data-bwignore";
@@ -48,17 +56,19 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
   private domRecentlyMutated = true;
   private _autofillFormElements: AutofillFormElements = new Map();
   private autofillFieldElements: AutofillFieldElements = new Map();
+  private cachedAutofillFieldElements = new Set();
   private currentLocationHref = "";
   private intersectionObserver: IntersectionObserver;
   private elementInitializingIntersectionObserver: Set<Element> = new Set();
   private mutationObserver: MutationObserver;
   private mutationsQueue: MutationRecord[][] = [];
   private autofillFieldMutations: Set<Node> = new Set();
+  private autofillFieldMutationsLastUpdated = Date.now();
   private updateAfterMutationIdleCallback: NodeJS.Timeout | number;
   private readonly updateAfterMutationTimeout = 1000;
   private readonly formFieldQueryString;
   // @TODO possible perf improvement here; enumerating additional nodes we don't care about (e.g. textNodes), may reduce the number of mutations we have to process
-  private readonly nonInputFormFieldTags = new Set(["textarea", "select"]);
+  private readonly nonInputFormFieldTags = new Set(["textarea", "select", "text"]);
   private readonly ignoredInputTypes = new Set([
     "hidden",
     "submit",
@@ -68,6 +78,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
     "file",
     // @TODO why not include?: "search", "url", "date", "time", "month", "week", "datetime-local", "datetime", "color", "range", "radio", "reset", "checkbox"
   ]);
+  private consecutiveMutationQueueThresholdOverageCount = 0;
 
   constructor(
     private domElementVisibilityService: DomElementVisibilityService,
@@ -105,7 +116,9 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
       return this.getFormattedPageDetails({}, []);
     }
 
-    if (!this.domRecentlyMutated && this.autofillFieldElements.size) {
+    const cachedElementsPresent = useNewAutofillFieldElementsCache ? this.cachedAutofillFieldElements.size : this.autofillFieldElements.size;
+
+    if (!this.domRecentlyMutated && cachedElementsPresent) {
       this.updateCachedAutofillFieldVisibility();
 
       return this.getFormattedPageDetails(
@@ -172,6 +185,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
       return;
     }
 
+    // @TODO check how performant this sort is at scale
     this.autofillFieldElements = new Map(
       [...this.autofillFieldElements].sort((a, b) => a[1].elementNumber - b[1].elementNumber),
     );
@@ -282,8 +296,8 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
   private async buildAutofillFieldsData(
     formFieldElements: FormFieldElement[],
   ): Promise<AutofillField[]> {
-    const autofillFieldElements = this.getAutofillFieldElements(100, formFieldElements);
-    const autofillFieldDataPromises = autofillFieldElements.map(this.buildAutofillFieldItem);
+    const autofillFieldElementsData = this.getAutofillFieldElements(100, formFieldElements);
+    const autofillFieldDataPromises = autofillFieldElementsData.map(this.buildAutofillFieldItem);
 
     return Promise.all(autofillFieldDataPromises);
   }
@@ -302,7 +316,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
     previouslyFoundFormFieldElements?: FormFieldElement[],
   ): FormFieldElement[] {
     let formFieldElements = previouslyFoundFormFieldElements;
-    if (!formFieldElements) {
+    if (!formFieldElements || !formFieldElements.length) {
       formFieldElements = this.domQueryService.query<FormFieldElement>(
         globalThis.document.documentElement,
         this.formFieldQueryString,
@@ -359,9 +373,14 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
     element.opid = `__${index}`;
 
     const existingAutofillField = this.autofillFieldElements.get(element);
+
+    // console.log('🚀 🚀 CollectAutofillContentService 🚀 element:', element);
+    // console.log('🚀 🚀 CollectAutofillContentService 🚀 this.autofillFieldElements:', this.autofillFieldElements);
+    // console.log('🚀 🚀 CollectAutofillContentService 🚀 existingAutofillField:', existingAutofillField);
     if (index >= 0 && existingAutofillField) {
       existingAutofillField.opid = element.opid;
       existingAutofillField.elementNumber = index;
+      console.log('buildAutofillFieldItem -> update existing autofill field', element)
       this.autofillFieldElements.set(element, existingAutofillField);
 
       return existingAutofillField;
@@ -443,11 +462,22 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
     element: ElementWithOpId<FormFieldElement>,
     autofillFieldData: AutofillField,
   ) {
-    if (index < 0) {
+    if (index < 0 || !Object.keys(element).length) {
       return;
     }
+    // console.log('🚀 🚀 CollectAutofillContentService 🚀 element:', element);
+    // console.log('🚀 🚀 CollectAutofillContentService 🚀 autofillFieldData:', autofillFieldData);
+    // console.log('🚀 🚀 CollectAutofillContentService 🚀 cacheAutofillFieldElement -> element, cachedElement:', element, this.autofillFieldElements.get(element));
 
+
+    // @TODO THIS IS LOGGING BEFORE THE `element` is resolved!! ><
+    console.log('🚀 🚀 CollectAutofillContentService 🚀 cacheAutofillFieldElement:', element);
+    let debugautofillFieldElements = this.autofillFieldElements;
+
+    // An identical re-rendered input that was added to Map before re-render will not be matched against the existing key in `autofillFieldElements`, and will consequently create a new record.
     this.autofillFieldElements.set(element, autofillFieldData);
+    debugautofillFieldElements = this.autofillFieldElements;
+
   }
 
   /**
@@ -938,6 +968,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
     // @TODO possible perf improvement here; enumerating the tag attributes we care about (with `attributeFilter`) limits the number of mutations we have to track and process (but also requires knowing to come here if you need to start observing a new attribute for mutations)
     this.mutationObserver.observe(document.documentElement, {
       attributes: true,
+      // characterData: false, // @TODO I'm still not sure if this is doing what I thought it was doing
       childList: true,
       subtree: true,
     });
@@ -1001,6 +1032,26 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
       this.checkPageContainsShadowDom();
     }
 
+    /*
+    // console.log('🚀 consecutiveQueueThresholdOverageCount:', this.consecutiveMutationQueueThresholdOverageCount);
+    // console.log('🚀 mutationQueueLength:', queueLength);
+    // If the queue length exceeds the threshold, check consecutive threshold overage count
+    if (queueLength > MAX_PERFORMANT_MUTATION_QUEUE_LENGTH) {
+      // If the queue length exceeds the maximum threshold more than x times in a row,
+      // slice the queue down to the maximum performant length to restore page performance.
+      if (this.consecutiveMutationQueueThresholdOverageCount >= MAX_MUTATION_QUEUE_THRESHOLD_OVERAGE_COUNT) {
+        this.mutationsQueue = MAX_PERFORMANT_MUTATION_QUEUE_LENGTH ? this.mutationsQueue.slice(-MAX_PERFORMANT_MUTATION_QUEUE_LENGTH) : [];
+        this.consecutiveMutationQueueThresholdOverageCount = 0;
+        queueLength = this.mutationsQueue.length;
+        // console.log('🚀🚀 Clearing the queue! New length is', queueLength);
+      } else {
+        this.consecutiveMutationQueueThresholdOverageCount++;
+      }
+    } else {
+      this.consecutiveMutationQueueThresholdOverageCount = 0;
+    }
+    */
+
     if (useNewMutationProcessingStrategy) {
       for (let queueIndex = 0; queueIndex < queueLength; queueIndex++) {
         const mutations = ephemeralQueue[queueIndex];
@@ -1017,12 +1068,19 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
 
       // Set up listeners on the resolved mutations state
       const qualifiedMutationsEffects = () => {
-        if (this.autofillOverlayContentService) {
+        const timeSinceLast = Date.now() - this.autofillFieldMutationsLastUpdated;
+
+        // Debounce is critical here in cases of rapid re-renders to allow constant add/remove mutations to resolve against each other.
+        const listenerSetupDebounceMs = 5000;
+
+        // Debounce here relies on `autofillFieldMutations` only being cleared here
+        if (this.autofillOverlayContentService && (timeSinceLast > listenerSetupDebounceMs)) {
           // @TODO temp conversion
           const targetNodes = Array.from(this.autofillFieldMutations.values());
           this.autofillFieldMutations = new Set<Node>();
 
           this.setupOverlayListenersOnMutatedElements(targetNodes);
+          this.autofillFieldMutationsLastUpdated = Date.now();
         }
       };
 
@@ -1033,6 +1091,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
         this.updateAutofillElementsAfterMutation();
       }
 
+      // Note, this may fire at any point up to 500ms; debounce within `qualifiedMutationsEffects` is an enforced additional x ms
       requestIdleCallbackPolyfill(qualifiedMutationsEffects, { timeout: 500 });
     } else {
       for (let queueIndex = 0; queueIndex < queueLength; queueIndex++) {
@@ -1194,6 +1253,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
     return isElementMutated;
   }
 
+  // @TODO right now, this method assumes received nodes are unique from each other (which will be true with the current batching system), but if we switch `mutatedAutofillElements` to be a Set instead of an array, we can do a performant lookup for a potential early exit. This would allow us to process combined batches with potential dupes. This in turn would allow for deferred batch accumulation (debouncing) to avoid clobbering the DOM renders where there are lots of constant updates. Note, this loses order in the process, but that is no longer a concern (and maybe never was here) with the new processing strategy.
   private getMutatedAutofillElements(nodes: NodeList): Set<Node> {
     const mutatedAutofillElements = new Set<Node>();
 
@@ -1221,9 +1281,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
       );
 
       if (autofillElements.length) {
-        autofillElements.forEach((node) => {
-          mutatedAutofillElements.add(node);
-        });
+        autofillElements.forEach(node => {mutatedAutofillElements.add(node)})
       }
     }
 
@@ -1238,9 +1296,11 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
    * @param mutatedElements - HTML elements that have been mutated
    */
   private setupOverlayListenersOnMutatedElements(mutatedElements: Node[]) {
+    // console.log('🚀 🚀 CollectAutofillContentService 🚀 setupOverlayListenersOnMutatedElements', mutatedElements.length);
     for (let elementIndex = 0; elementIndex < mutatedElements.length; elementIndex++) {
       const node = mutatedElements[elementIndex];
-      const buildAutofillFieldItemCallback = () => {
+      const debugElements = this.autofillFieldElements;
+      const buildAutofillFieldItemCallback = async () => {
         if (
           !this.isNodeFormFieldElement(node) ||
           this.autofillFieldElements.get(node as ElementWithOpId<FormFieldElement>)
@@ -1250,7 +1310,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
 
         // We are setting this item to a -1 index because we do not know its position in the DOM.
         // This value should be updated with the next call to collect page details.
-        void this.buildAutofillFieldItem(node as ElementWithOpId<FormFieldElement>, -1);
+        void await this.buildAutofillFieldItem(node as ElementWithOpId<FormFieldElement>, -1);
       };
 
       requestIdleCallbackPolyfill(buildAutofillFieldItemCallback, { timeout: 1000 });
@@ -1412,6 +1472,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
     updateActions[attributeName]();
 
     if (this.autofillFieldElements.has(element)) {
+      console.log('🚀 🚀 CollectAutofillContentService 🚀 autofillFieldElements has element', element);
       this.autofillFieldElements.set(element, dataTarget);
     }
   }
@@ -1489,11 +1550,13 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
    * @param pageDetails - The page details to use for the inline menu listeners
    */
   private setupOverlayListeners(pageDetails: AutofillPageDetails) {
+      console.log('🚀 🚀 CollectAutofillContentService 🚀 setupOverlayListeners -> autofillFieldElements.size', this.autofillFieldElements.size);
     if (this.autofillOverlayContentService) {
       // @TODO because this is iterating over state, debouncing this iteration for rapid state updates may help avoid unneeded iterations
       this.autofillFieldElements.forEach((autofillField, formFieldElement) => {
         this.setupOverlayOnField(formFieldElement, autofillField, pageDetails);
       });
+
     }
   }
 

@@ -547,6 +547,7 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
     selector: string,
     treeWalkerFilter: CallableFunction,
   ) {
+    // console.log('🚀 🚀 AutofillOverlayContentService 🚀 querySubmitButtonElement:');
     const submitButtonElements = this.domQueryService.query<HTMLButtonElement>(
       element,
       selector,
@@ -1253,6 +1254,7 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
     formFieldElement: ElementWithOpId<FormFieldElement>,
     autofillFieldData: AutofillField,
   ) {
+    console.log('🚀 🚀 AutofillOverlayContentService 🚀 this.formFieldElements.size:', this.formFieldElements.size);
     this.formFieldElements.set(formFieldElement, autofillFieldData);
 
     if (elementIsFillableFormField(formFieldElement) && !!formFieldElement.value) {
