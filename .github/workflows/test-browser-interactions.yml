@@ -35,9 +35,11 @@ jobs:
       # if: steps.changed-files.outputs.monitored == 'true'
       uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
       with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
           console.log('🚀 🚀 context:', context);
-          console.log({
+          console.log('🚀 🚀 event:', github.event);
+          github.rest.actions.createWorkflowDispatch({
             owner: context.repo.owner,
             repo: "browser-interactions-testing",
             workflow_id: "test-all.yml",
@@ -48,4 +50,4 @@ jobs:
             body: {
               "event_type": "trigger-workflow",
             }
-          })
+          });
