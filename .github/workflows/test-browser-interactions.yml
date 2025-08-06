@@ -35,28 +35,11 @@ jobs:
       uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
       with:
         script: |
-          console.log('🚀 🚀 context.payload:', context.payload);
-          console.log({
-            owner: context.payload.repository.owner,
-            repo: "browser-interactions-testing",
-            workflow_id: "test-all.yml",
-            inputs: {
-              origin_branch: context.payload.workflow_run.head_branch,
-              origin_pr: context.payload.workflow_run.pull_requests,
-              origin_issue: context.payload.issue,
-              origin_repo: context.payload.repo
-            },
-            body: {
-              "event_type": "trigger-workflow",
-            }
-          })
-
           github.rest.actions.createWorkflowDispatch({
             owner: context.repo.owner,
             repo: "browser-interactions-testing",
             workflow_id: "test-all.yml",
             inputs: {
-              origin_branch: context.payload.workflow_run.head_branch,
               origin_issues: context.payload.workflow_run.pull_requests,
             },
             body: {
