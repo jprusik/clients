@@ -34,19 +34,17 @@ jobs:
       # if: steps.changed-files.outputs.monitored == 'true'
       uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
-          console.log('🚀 🚀 context:', context);
-          console.log('🚀 🚀 event:', github.event);
+          console.log('🚀 🚀 context.payload:', context.payload);
           console.log({
-            owner: context.repo.owner,
+            owner: context.payload.repository.owner,
             repo: "browser-interactions-testing",
             workflow_id: "test-all.yml",
             inputs: {
-              origin_branch: context.workflow_run.head_branch,
-              origin_pr: context.workflow_run.pull_requests,
-              origin_issue: context.issue,
-              origin_repo: context.repo
+              origin_branch: context.payload.workflow_run.head_branch,
+              origin_pr: context.payload.workflow_run.pull_requests,
+              origin_issue: context.payload.issue,
+              origin_repo: context.payload.repo
             },
             body: {
               "event_type": "trigger-workflow",
@@ -58,8 +56,8 @@ jobs:
             repo: "browser-interactions-testing",
             workflow_id: "test-all.yml",
             inputs: {
-              origin_branch: context.workflow_run.head_branch,
-              origin_issues: context.workflow_run.pull_requests,
+              origin_branch: context.payload.workflow_run.head_branch,
+              origin_issues: context.payload.workflow_run.pull_requests,
             },
             body: {
               "event_type": "trigger-workflow",
