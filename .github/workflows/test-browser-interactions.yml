@@ -38,7 +38,7 @@ jobs:
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
-          console.log('🚀 🚀 steps.changed-files.outputs.monitored:', steps.changed-files.outputs.monitored);
+          console.log('🚀 🚀 github', github);
 
           for (const issue of context.payload.workflow_run.pull_requests) {
             github.rest.actions.createWorkflowDispatch({
