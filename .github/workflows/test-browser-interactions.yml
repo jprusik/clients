@@ -39,8 +39,7 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
           console.log('🚀 🚀 steps.changed-files.outputs.monitored:', steps.changed-files.outputs.monitored);
-          console.log('🚀 context.payload', context.payload)
-          console.log('🚀 head_branch', context.payload.workflow_run.head_branch)
+
           for (const issue of context.payload.workflow_run.pull_requests) {
             github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
