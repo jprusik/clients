@@ -23,6 +23,7 @@ jobs:
       with:
         list-files: shell
         # ref: context.payload.workflow_run.head_branch
+        ref: ${{ github.event.workflow_run.head_branch }}
         token: ${{ secrets.GITHUB_TOKEN }}
         filters: |
           monitored:
@@ -41,9 +42,9 @@ jobs:
               owner: context.repo.owner,
               repo: "browser-interactions-testing",
               workflow_id: "test-all.yml",
+              ref: "main",
               inputs: {
                 origin_issue: issue,
               },
-              event_type: "trigger-workflow",
             });
           }
