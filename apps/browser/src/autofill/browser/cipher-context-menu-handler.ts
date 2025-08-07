@@ -1,6 +1,6 @@
 import { firstValueFrom } from "rxjs";
 
-// asefassa
+// asefass
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
