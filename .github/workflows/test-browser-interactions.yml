@@ -44,8 +44,6 @@ jobs:
               inputs: {
                 origin_issue: issue,
               },
-              body: {
-                "event_type": "trigger-workflow",
-              }
+              event_type: "trigger-workflow",
             });
           }
