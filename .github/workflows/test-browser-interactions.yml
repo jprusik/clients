@@ -38,13 +38,14 @@ jobs:
         github-token: ${{ secrets.CROSS_REPO_TOKEN }}
         script: |
           for (const issue of context.payload.workflow_run.pull_requests) {
-            github.rest.actions.createWorkflowDispatch({
+            github.rest.actions.createDispatchEvent({
               owner: context.repo.owner,
               repo: "browser-interactions-testing",
-              workflow_id: "test-all.yml",
-              ref: "main",
-              inputs: {
-                origin_issue: issue,
-              },
+              event_type: "trigger-bit-tests",
+              client_payload: {
+                origin_issue: issue.id,
+                origin_branch: issue.head.ref
+                origin_repo: issue.head.clients
+              }
             });
           }
