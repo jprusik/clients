@@ -10,7 +10,9 @@ jobs:
   check-files:
     name: Check files
     runs-on: ubuntu-22.04
-    permissions: write-all
+    permissions:
+      contents: read
+      actions: read
     steps:
     - name: Checkout code
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -41,5 +43,5 @@ jobs:
           {
             "origin_issue": ${{ github.event.workflow_run.pull_requests[0].number }},
             "origin_branch": "${{ github.event.workflow_run.pull_requests[0].head.ref }}",
-            "origin_repo": "${{ github.event.workflow_run.pull_requests[0].head.clients }}"
+            "origin_repo": "${{ github.event.workflow_run.pull_requests[0].head.repo.name }}"
           }
