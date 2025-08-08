@@ -33,19 +33,14 @@ jobs:
 
     - name: Trigger test-all workflow in browser-interactions-testing
       # if: steps.changed-files.outputs.monitored == 'true'
-      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+      uses: peter-evans/repository-dispatch@v3
       with:
-        github-token: ${{ secrets.CROSS_REPO_TOKEN }}
-        script: |
-          for (const issue of context.payload.workflow_run.pull_requests) {
-            github.rest.actions.createDispatchEvent({
-              owner: context.repo.owner,
-              repo: "browser-interactions-testing",
-              event_type: "trigger-bit-tests",
-              client_payload: {
-                origin_issue: issue.id,
-                origin_branch: issue.head.ref,
-                origin_repo: issue.head.clients
-              }
-            });
+        token: ${{ secrets.CROSS_REPO_TOKEN }}
+        repository: "${{ context.repo.owner }}/browser-interactions-testing"
+        event-type: trigger-bit-tests
+        client-payload: |-
+          {
+            "origin_issue": ${{ issue.id }},
+            "origin_branch": ${{ issue.head.ref }},
+            "origin_repo": ${{ issue.head.clients }}
           }
