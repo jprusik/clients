@@ -44,7 +44,7 @@ jobs:
               event_type: "trigger-bit-tests",
               client_payload: {
                 origin_issue: issue.id,
-                origin_branch: issue.head.ref
+                origin_branch: issue.head.ref,
                 origin_repo: issue.head.clients
               }
             });
