@@ -32,8 +32,7 @@ jobs:
             - 'apps/browser/src/platform/services/browser-script-injector.service.ts'
 
     - name: Trigger test-all workflow in browser-interactions-testing
-      # if: steps.changed-files.outputs.monitored == 'true'
-      if: github.event.workflow_run.pull_requests.length > 0
+      if: steps.changed-files.outputs.monitored == 'true'
       uses: peter-evans/repository-dispatch@ff45666b9427631e3450c54a1bcbee4d9ff4d7c0 # v3.0.0
       with:
         token: ${{ secrets.CROSS_REPO_TOKEN }}
