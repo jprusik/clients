@@ -61,6 +61,7 @@ class AutofillInit implements AutofillInitInterface {
    * be called once when the content script is loaded.
    */
   init() {
+    // Test change
     this.setupExtensionMessageListeners();
     this.autofillOverlayContentService?.init();
     this.collectPageDetailsOnLoad();
