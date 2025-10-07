@@ -1,5 +1,7 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
+import { AutofillFieldQualifierType } from "../enums/autofill-field.enums";
+
 import AutofillField from "./autofill-field";
 import AutofillForm from "./autofill-form";
 
@@ -19,4 +21,5 @@ export default class AutofillPageDetails {
    */
   fields: AutofillField[];
   collectedTimestamp: number;
+  // targetingRules?: {[type in AutofillFieldQualifierType]?: string};
 }

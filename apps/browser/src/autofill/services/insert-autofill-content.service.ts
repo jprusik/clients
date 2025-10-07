@@ -2,6 +2,7 @@
 // @ts-strict-ignore
 import { EVENTS, TYPE_CHECK } from "@bitwarden/common/autofill/constants";
 
+import { AutofillFieldQualifierType } from "../enums/autofill-field.enums";
 import AutofillScript, { AutofillInsertActions, FillScript } from "../models/autofill-script";
 import { FormFieldElement } from "../types";
 import {
@@ -21,6 +22,9 @@ class InsertAutofillContentService implements InsertAutofillContentServiceInterf
     fill_by_opid: ({ opid, value }) => this.handleFillFieldByOpidAction(opid, value),
     click_on_opid: ({ opid }) => this.handleClickOnFieldByOpidAction(opid),
     focus_by_opid: ({ opid }) => this.handleFocusOnFieldByOpidAction(opid),
+    fill_by_targeted_field_type: ({ fieldType, value }) => this.handleFillFieldByTargetedFieldTypeAction(fieldType, value),
+    click_on_targeted_field_type: ({ fieldType }) => this.handleClickOnFieldByTargetedFieldTypeAction(fieldType),
+    focus_by_targeted_field_type: ({ fieldType }) => this.handleFocusOnFieldByTargetedFieldTypeAction(fieldType),
   };
 
   /**
@@ -123,17 +127,35 @@ class InsertAutofillContentService implements InsertAutofillContentServiceInterf
    * @private
    */
   private runFillScriptAction = (
-    [action, opid, value]: FillScript,
+    [action, actionTarget, value]: FillScript,
     actionIndex: number,
   ): Promise<void> => {
-    if (!opid || !this.autofillInsertActions[action]) {
+    if ((!actionTarget) || !this.autofillInsertActions[action]) {
       return;
     }
 
     const delayActionsInMilliseconds = 20;
     return new Promise((resolve) =>
       setTimeout(() => {
-        this.autofillInsertActions[action]({ opid, value });
+        switch(action) {
+          case 'fill_by_targeted_field_type':
+            this.autofillInsertActions[action]({ fieldType: actionTarget as AutofillFieldQualifierType, value });
+            break;
+          case 'click_on_targeted_field_type':
+          case 'focus_by_targeted_field_type':
+            this.autofillInsertActions[action]({ fieldType: actionTarget as AutofillFieldQualifierType });
+            break;
+          case 'fill_by_opid':
+            this.autofillInsertActions[action]({ opid: actionTarget, value });
+            break;
+          case 'click_on_opid':
+          case 'focus_by_opid':
+            this.autofillInsertActions[action]({ opid: actionTarget });
+            break;
+          default:
+            break;
+        }
+
         resolve();
       }, delayActionsInMilliseconds * actionIndex),
     );
@@ -175,6 +197,55 @@ class InsertAutofillContentService implements InsertAutofillContentServiceInterf
     }
 
     this.simulateUserMouseClickAndFocusEventInteractions(element, true);
+  }
+
+  /**
+   * Queries the DOM for an element by opid and inserts the passed value into the element.
+   * @param {string} opid
+   * @param {string} value
+   * @private
+   */
+  private handleFillFieldByTargetedFieldTypeAction(fieldType: AutofillFieldQualifierType, value: string) {
+    const targetedElements = this.collectAutofillContentService.getTargetedFields();
+    const targetedElement = targetedElements[fieldType] as HTMLElement;
+
+    if (targetedElement) {
+      this.insertValueIntoField(targetedElement, value);
+    }
+  }
+
+  /**
+   * Handles finding an element by opid and triggering a click event on the element.
+   * @param {string} opid
+   * @private
+   */
+  private handleClickOnFieldByTargetedFieldTypeAction(fieldType: AutofillFieldQualifierType) {
+    const targetedElements = this.collectAutofillContentService.getTargetedFields();
+    const targetedElement = targetedElements[fieldType] as HTMLElement;
+
+    if (targetedElement) {
+      this.triggerClickOnElement(targetedElement);
+    }
+  }
+
+  /**
+   * Handles finding an element by opid and triggering click and focus events on the element.
+   * To ensure that we trigger a blur event correctly on a filled field, we first check if the
+   * element is already focused. If it is, we blur the element before focusing on it again.
+   *
+   * @param {string} opid - The opid of the element to focus on.
+   */
+  private handleFocusOnFieldByTargetedFieldTypeAction(fieldType: AutofillFieldQualifierType) {
+    const targetedElements = this.collectAutofillContentService.getTargetedFields();
+    const targetedElement = targetedElements[fieldType] as HTMLElement;
+
+    if (targetedElement) {
+      if (document.activeElement === targetedElement) {
+        targetedElement.blur();
+      }
+
+      this.simulateUserMouseClickAndFocusEventInteractions(targetedElement, true);
+    }
   }
 
   /**

@@ -2,7 +2,7 @@
 // @ts-strict-ignore
 import { CipherType } from "@bitwarden/common/vault/enums";
 
-import { AutofillFieldQualifierType } from "../enums/autofill-field.enums";
+import { AutofillFieldQualifier, AutofillFieldQualifierType } from "../enums/autofill-field.enums";
 import AutofillField from "../models/autofill-field";
 import AutofillForm from "../models/autofill-form";
 import AutofillPageDetails from "../models/autofill-page-details";
@@ -52,7 +52,12 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
   /**
    * A value of `null` indicates the configuration has not been initialized, whereas an empty object indicates no set rules.
    */
-  private readonly pageTargetingRules: null | { [type in AutofillFieldQualifierType]?: string } = {};
+  readonly pageTargetingRules: null | { [type in AutofillFieldQualifierType]?: string } = {
+    // [AutofillFieldQualifier.password]: "input.typeless-search-input",
+    // [AutofillFieldQualifier.username]: "#form-container >>> form label + div >>> input[name=password]",
+    [AutofillFieldQualifier.password]: "input[type='password']",
+    // [AutofillFieldQualifier.password]: "#form-container >>> form label + div >>> input[name=username]",
+  };
   private intersectionObserver: IntersectionObserver;
   private elementInitializingIntersectionObserver: Set<Element> = new Set();
   private mutationObserver: MutationObserver;
@@ -100,30 +105,6 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
 
     const targetedFields = this.getTargetedFields();
     const targetedFieldNames = Object.keys(targetedFields) as AutofillFieldQualifierType[];
-    if (targetedFieldNames.length) {
-      for (const fieldName of targetedFieldNames) {
-        const fieldNode = targetedFields[fieldName] as ElementWithOpId<FormFieldElement>;
-
-        void this.autofillOverlayContentService.setupOverlayListenersOnQualifiedField(
-          fieldNode,
-          {
-            // @TODO needs an opid and added to the list in order for autofill to work
-            opid: fieldNode.opid || `targeted_field_${fieldName}`,
-            elementNumber: 0, // Not relevant when using targeting rules
-            viewable: true,
-            htmlID: fieldNode.getAttribute('id'),
-            htmlName: fieldNode.getAttribute('name'),
-            htmlClass: fieldNode.getAttribute('class'),
-            tabindex: fieldNode.getAttribute('tabindex'),
-            title: fieldNode.getAttribute('title'),
-            inlineMenuFillType: CipherType.Login,
-            fieldQualifier: fieldName,
-          },
-        );
-      }
-
-      return {} as AutofillPageDetails;
-    }
 
     if (!this.mutationObserver) {
       this.setupMutationObserver();
@@ -149,7 +130,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
     const { formElements, formFieldElements } = this.queryAutofillFormAndFieldElements();
     const autofillFormsData: Record<string, AutofillForm> =
       this.buildAutofillFormsData(formElements);
-    const autofillFieldsData: AutofillField[] = (
+    let autofillFieldsData: AutofillField[] = (
       await this.buildAutofillFieldsData(formFieldElements as FormFieldElement[])
     ).filter((field) => !!field);
     this.sortAutofillFieldElementsMap();
@@ -160,6 +141,37 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
 
     this.domRecentlyMutated = false;
     const pageDetails = this.getFormattedPageDetails(autofillFormsData, autofillFieldsData);
+
+    if (targetedFieldNames.length) {
+      autofillFieldsData = [];
+      this.noFieldsFound = false;
+
+      for (const fieldName of targetedFieldNames) {
+        const fieldNode = targetedFields[fieldName] as ElementWithOpId<FormFieldElement>;
+        console.log('🚀 🚀 fieldNode:', fieldNode);
+        const autofillField = {
+            // @TODO needs an opid and added to the list in order for autofill to work
+            opid: `targeted_field_${fieldName}`,
+            elementNumber: 0, // Not relevant when using targeting rules
+            viewable: true,
+            htmlID: fieldNode.getAttribute('id'),
+            htmlName: fieldNode.getAttribute('name'),
+            htmlClass: fieldNode.getAttribute('class'),
+            tabindex: fieldNode.getAttribute('tabindex'),
+            title: fieldNode.getAttribute('title'),
+            inlineMenuFillType: CipherType.Login,
+            fieldQualifier: fieldName,
+          };
+        autofillFieldsData = [...autofillFieldsData, autofillField];
+
+        void this.autofillOverlayContentService.setupOverlayListenersOnQualifiedField(
+          fieldNode,
+          autofillField,
+        );
+      }
+
+      return {...pageDetails, fields: autofillFieldsData} as AutofillPageDetails;
+    }
 
     this.setupOverlayListeners(pageDetails);
 

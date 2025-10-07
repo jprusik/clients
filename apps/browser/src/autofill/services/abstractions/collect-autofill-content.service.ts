@@ -1,3 +1,4 @@
+import { AutofillFieldQualifierType } from "../../enums/autofill-field.enums";
 import AutofillField from "../../models/autofill-field";
 import AutofillForm from "../../models/autofill-form";
 import AutofillPageDetails from "../../models/autofill-page-details";
@@ -16,6 +17,7 @@ type UpdateAutofillDataAttributeParams = {
 
 interface CollectAutofillContentService {
   autofillFormElements: AutofillFormElements;
+  pageTargetingRules: null | { [type in AutofillFieldQualifierType]?: string };
   getPageDetails(): Promise<AutofillPageDetails>;
   getAutofillFieldElementByOpid(opid: string): HTMLElement | null;
   getTargetedFields(): {[key: string]: Element} | null;

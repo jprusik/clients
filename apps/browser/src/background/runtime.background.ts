@@ -127,7 +127,11 @@ export default class RuntimeBackground {
       case "collectPageDetailsResponse":
         switch (msg.sender) {
           case "autofiller":
+          case "autofillInit":
           case ExtensionCommand.AutofillCommand: {
+            if (msg.details) {
+            console.log('🚀 🚀 processMessageWithSender > msg:', msg );
+            }
             const activeUserId = await firstValueFrom(
               this.accountService.activeAccount$.pipe(map((a) => a?.id)),
             );

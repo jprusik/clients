@@ -51,6 +51,7 @@ import { ScriptInjectorService } from "../../platform/services/abstractions/scri
 // FIXME (PM-22628): Popup imports are forbidden in background
 // eslint-disable-next-line no-restricted-imports
 import { openVaultItemPasswordRepromptPopout } from "../../vault/popup/utils/vault-popout-window";
+import { AutofillFieldQualifier, AutofillFieldQualifierType } from "../enums/autofill-field.enums";
 import { AutofillMessageCommand, AutofillMessageSender } from "../enums/autofill-message.enums";
 import { AutofillPort } from "../enums/autofill-port.enum";
 import AutofillField from "../models/autofill-field";
@@ -65,6 +66,7 @@ import {
   GenerateFillScriptOptions,
   PageDetail,
 } from "./abstractions/autofill.service";
+// import { DomQueryService } from "./abstractions/dom-query.service";
 import {
   AutoFillConstants,
   CardExpiryDateFormat,
@@ -72,12 +74,20 @@ import {
   IdentityAutoFillConstants,
 } from "./autofill-constants";
 
+// type TargetedFields = { [type in AutofillFieldQualifierType]?: Element };
+
 export default class AutofillService implements AutofillServiceInterface {
   private openVaultItemPasswordRepromptPopout = openVaultItemPasswordRepromptPopout;
   private openPasswordRepromptPopoutDebounce: number | NodeJS.Timeout;
   private currentlyOpeningPasswordRepromptPopout = false;
   private autofillScriptPortsSet = new Set<chrome.runtime.Port>();
   static searchFieldNamesSet = new Set(AutoFillConstants.SearchFieldNames);
+  readonly pageTargetingRules: null | { [type in AutofillFieldQualifierType]?: string } = {
+    // [AutofillFieldQualifier.password]: "input.typeless-search-input",
+    // [AutofillFieldQualifier.username]: "#form-container >>> form label + div >>> input[name=password]",
+    [AutofillFieldQualifier.password]: "input[type='password']",
+    // [AutofillFieldQualifier.password]: "#form-container >>> form label + div >>> input[name=username]",
+  };
 
   constructor(
     private cipherService: CipherService,
@@ -93,6 +103,7 @@ export default class AutofillService implements AutofillServiceInterface {
     private authService: AuthService,
     private configService: ConfigService,
     private userNotificationSettingsService: UserNotificationSettingsServiceAbstraction,
+    // private domQueryService: DomQueryService,
     private messageListener: MessageListener,
   ) {}
 
@@ -403,13 +414,46 @@ export default class AutofillService implements AutofillServiceInterface {
     return await firstValueFrom(this.domainSettingsService.defaultUriMatchStrategy$);
   }
 
+  // getTargetedFields(): TargetedFields {
+  //   if (this.pageTargetingRules) {
+  //     const definedTargetingRuleFields = Object.keys(
+  //       this.pageTargetingRules,
+  //     ) as AutofillFieldQualifierType[];
+
+  //     // Note - potential bottleneck at async lookup (alternatively, promise map)
+  //     const foundTargetedFields = definedTargetingRuleFields.reduce((foundFields, fieldName) => {
+  //       const targetingRule = this.pageTargetingRules[fieldName];
+  //       const fieldMatches = this.domQueryService.queryDeepSelector(
+  //         globalThis.document,
+  //         targetingRule,
+  //       );
+
+  //       return fieldMatches.length
+  //         ? {
+  //             ...foundFields,
+  //             [fieldName]: fieldMatches[0],
+  //           }
+  //         : foundFields;
+  //     }, {});
+
+  //     return foundTargetedFields;
+  //   }
+
+  //   return {};
+  // }
+
   /**
    * Autofill a given tab with a given login item
    * @param {AutoFillOptions} options Instructions about the autofill operation, including tab and login item
    * @returns {Promise<string | null>} The TOTP code of the successfully autofilled login, if any
    */
   async doAutoFill(options: AutoFillOptions): Promise<string | null> {
+    console.log('🚀 🚀 doAutoFill > options:', options);
     const tab = options.tab;
+    // const pageRules = await firstValueFrom(this.autofillSettingsService.getUrlAutofillTargetingRules$(tab.url));
+    // console.log('🚀 🚀 pageRules:', pageRules);
+    // const targetedFields = this.getTargetedFields();
+    // console.log('🚀 🚀 targetedFields:', targetedFields);
     if (!tab || !options.cipher || !options.pageDetails || !options.pageDetails.length) {
       throw new Error("Nothing to autofill.");
     }
@@ -452,6 +496,7 @@ export default class AutofillService implements AutofillServiceInterface {
           tabUrl: tab.url,
           defaultUriMatch: defaultUriMatch,
         });
+        // console.log('🚀 🚀 fillScript:', fillScript);
 
         if (!fillScript || !fillScript.script || !fillScript.script.length) {
           return;
@@ -571,10 +616,11 @@ export default class AutofillService implements AutofillServiceInterface {
       return null;
     }
 
+    console.log('🚀 🚀 doAutoFillOnTab > pageDetails:', pageDetails, fromCommand);
     const totpCode = await this.doAutoFill({
-      tab: tab,
-      cipher: cipher,
-      pageDetails: pageDetails,
+      tab,
+      cipher,
+      pageDetails,
       skipLastUsed: !fromCommand,
       skipUsernameOnlyFill: !fromCommand,
       onlyEmptyFields: !fromCommand,
@@ -631,6 +677,7 @@ export default class AutofillService implements AutofillServiceInterface {
     fromCommand: boolean,
     cipherType?: CipherType,
   ): Promise<string | null> {
+    console.log('🚀 🚀 doAutoFillActiveTab > pageDetails:', pageDetails);
     if (!pageDetails[0]?.details?.fields?.length) {
       return null;
     }
@@ -733,6 +780,7 @@ export default class AutofillService implements AutofillServiceInterface {
     pageDetails: AutofillPageDetails,
     options: GenerateFillScriptOptions,
   ): Promise<AutofillScript | null> {
+    console.log('🚀 🚀 AutofillService > generateFillScript > pageDetails:', pageDetails);
     if (!pageDetails || !options.cipher) {
       return null;
     }
@@ -832,6 +880,14 @@ export default class AutofillService implements AutofillServiceInterface {
     filledFields: { [id: string]: AutofillField },
     options: GenerateFillScriptOptions,
   ): Promise<AutofillScript | null> {
+    // console.log('🚀 🚀 options.cipher:', options.cipher);
+    // if (options.cipher.fields?.length) {
+    //   // If the field name has a selector
+    //   for (const field in options.cipher.fields) {
+    //     field.name?.match('>>>')
+    //   }
+    // }
+
     if (!options.cipher.login) {
       return null;
     }
@@ -862,6 +918,8 @@ export default class AutofillService implements AutofillServiceInterface {
         continue;
       }
 
+
+      // console.log('🚀 🚀 passwordFields:', passwordFields);
       passwordFields.forEach((passField) => {
         pf = passField;
         passwords.push(pf);
@@ -925,11 +983,13 @@ export default class AutofillService implements AutofillServiceInterface {
           ]) ||
             field.autoCompleteType === "one-time-code") &&
           !AutofillService.fieldIsFuzzyMatch(field, [...AutoFillConstants.RecoveryCodeFieldNames]);
+        // console.log('🚀 🚀 isFillableTotpField:', isFillableTotpField);
 
         const isFillableUsernameField =
           !options.skipUsernameOnlyFill &&
           ["email", "tel", "text"].some((t) => t === field.type) &&
           AutofillService.fieldIsFuzzyMatch(field, AutoFillConstants.UsernameFieldNames);
+        // console.log('🚀 🚀 isFillableUsernameField:', isFillableUsernameField, field);
 
         // Prefer more uniquely keyworded fields first.
         switch (true) {
@@ -1196,6 +1256,8 @@ export default class AutofillService implements AutofillServiceInterface {
         filledFields,
       );
     }
+
+    // fillScript.script.push([])
 
     return fillScript;
   }
@@ -2643,6 +2705,20 @@ export default class AutofillService implements AutofillServiceInterface {
     }
     fillScript.script.push(["fill_by_opid", field.opid, value]);
   }
+
+  // static fillByTargetedRules(fillScript: AutofillScript, query: string, value: string): void {
+  //   const customQuery = query;
+  //   const targetedFields = collectAutofillContentService.getTargetedFields();
+
+  //   if (field.maxLength && value && value.length > field.maxLength) {
+  //     value = value.substr(0, value.length);
+  //   }
+  //   if (field.tagName !== "span") {
+  //     fillScript.script.push(["click_on_custom_query", customQuery]);
+  //     fillScript.script.push(["focus_by_custom_query", customQuery]);
+  //   }
+  //   fillScript.script.push(["fill_by_custom_query", customQuery, value]);
+  // }
 
   /**
    * Identifies if the field is a custom field, a custom
