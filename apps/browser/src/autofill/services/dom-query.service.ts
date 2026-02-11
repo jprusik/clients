@@ -1,4 +1,8 @@
-import { EVENTS, MAX_DEEP_QUERY_RECURSION_DEPTH } from "@bitwarden/common/autofill/constants";
+import {
+  DEEP_QUERY_SELECTOR_SEPARATOR,
+  EVENTS,
+  MAX_DEEP_QUERY_RECURSION_DEPTH,
+} from "@bitwarden/common/autofill/constants";
 
 import { nodeIsElement } from "../utils";
 
@@ -81,6 +85,53 @@ export class DomQueryService implements DomQueryServiceInterface {
   checkPageContainsShadowDom = (): void => {
     this.pageContainsShadowDom = this.queryShadowRoots(globalThis.document.body, true).length > 0;
   };
+
+  /**
+   * Queries the DOM using a selector that supports the `>>>` syntax for
+   * piercing shadow DOM boundaries. Each segment separated by `>>>` is
+   * queried within the shadow root of the previous result.
+   *
+   * Example: `"my-component >>> .inner-field"` will:
+   * 1. Find `my-component` in the document
+   * 2. Enter its shadow root
+   * 3. Query for `.inner-field` within that shadow root
+   *
+   * @param selector - CSS selector string, optionally containing `>>>` for shadow DOM piercing
+   * @returns The first matching element, or null if no match is found
+   */
+  queryDeepSelector(selector: string): Element | null {
+    if (!selector) {
+      return null;
+    }
+
+    const segments = selector.split(DEEP_QUERY_SELECTOR_SEPARATOR).map((s) => s.trim());
+    let context: Document | ShadowRoot | Element = globalThis.document;
+
+    for (let i = 0; i < segments.length; i++) {
+      const segment = segments[i];
+      if (!segment) {
+        return null;
+      }
+
+      const element = context.querySelector(segment);
+      if (!element) {
+        return null;
+      }
+
+      // If there are more segments, traverse into the shadow root
+      if (i < segments.length - 1) {
+        const shadow = this.getShadowRoot(element);
+        if (!shadow) {
+          return null;
+        }
+        context = shadow;
+      } else {
+        return element;
+      }
+    }
+
+    return null;
+  }
 
   /**
    * Initializes the DomQueryService, checking for the presence of shadow DOM elements on the page.
