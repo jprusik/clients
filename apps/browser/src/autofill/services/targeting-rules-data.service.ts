@@ -2,11 +2,11 @@ import {
   catchError,
   defer,
   EMPTY,
-  exhaustMap,
   firstValueFrom,
   from,
   retry,
   Subject,
+  switchMap,
   takeUntil,
   tap,
   timer,
@@ -88,7 +88,10 @@ export class TargetingRulesDataService {
 
     this._triggerUpdate$
       .pipe(
-        exhaustMap(() => this._backgroundUpdate()),
+        // switchMap cancels any in-progress update (including retry delays)
+        // when a new trigger arrives, ensuring account/environment switches
+        // are not blocked by a stale retry chain
+        switchMap(() => this._backgroundUpdate()),
         takeUntil(this._destroy$),
       )
       .subscribe();
@@ -100,6 +103,15 @@ export class TargetingRulesDataService {
     this.configService.serverConfig$.pipe(takeUntil(this._destroy$)).subscribe(() => {
       this._triggerUpdate$.next();
     });
+  }
+
+  /**
+   * Forces an immediate re-fetch of targeting rules, ignoring the cache.
+   * Intended for user-initiated actions (e.g. vault sync).
+   */
+  async forceUpdate(): Promise<void> {
+    await this._resetMeta();
+    this._triggerUpdate$.next();
   }
 
   private async _resetMeta(): Promise<void> {
