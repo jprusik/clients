@@ -183,6 +183,49 @@ describe("AutofillInlineMenuList", () => {
         ).toBeNull();
       });
 
+      it("renders the Lit show all items action with the new item action when the empty list is filtered", async () => {
+        postWindowMessage(
+          createInitAutofillInlineMenuListMessageMock({
+            authStatus: AuthenticationStatus.Unlocked,
+            ciphers: [],
+            inlineMenuFilterIsActive: true,
+            portKey,
+            useLitComponents: true,
+          }),
+        );
+        await flushPromises();
+
+        expect(InlineMenuPrompt).toHaveBeenCalledWith(
+          expect.objectContaining({
+            actionDataTestId: "inline-menu-new-item-button",
+            secondaryAction: expect.objectContaining({
+              actionDataTestId: "inline-menu-show-all-items-button",
+            }),
+          }),
+        );
+      });
+
+      it("renders the Lit show all items action below a filtered cipher list", async () => {
+        postWindowMessage(
+          createInitAutofillInlineMenuListMessageMock({
+            authStatus: AuthenticationStatus.Unlocked,
+            ciphers: [createAutofillOverlayCipherDataMock(1)],
+            inlineMenuFilterIsActive: true,
+            portKey,
+            useLitComponents: true,
+          }),
+        );
+        await flushPromises();
+
+        expect(InlineMenuCipherList).toHaveBeenCalledWith(
+          expect.objectContaining({
+            newItem: expect.objectContaining({
+              actionDataTestId: "inline-menu-show-all-items-button",
+            }),
+          }),
+        );
+      });
+
       it("allows the user to add a vault item from the Lit empty-state prompt", async () => {
         postWindowMessage(
           createInitAutofillInlineMenuListMessageMock({

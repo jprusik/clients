@@ -60,6 +60,7 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
   private inlineMenuFillType!: InlineMenuFillType;
   private showInlineMenuAccountCreation = false;
   private showPasskeysLabels = false;
+  private inlineMenuFilterIsActive = false;
   /** Conditionally set in buildNewItemButton, cleared on container reset. */
   private newItemButtonElement?: HTMLButtonElement;
   /** Conditionally set in buildPasskeysHeadingElements, may be undefined when no passkeys. */
@@ -667,22 +668,17 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
     this.ciphers = this.getFilteredCiphersForTotpField(ciphers);
     this.currentCipherIndex = 0;
     this.showInlineMenuAccountCreation = showInlineMenuAccountCreation;
+    this.inlineMenuFilterIsActive = inlineMenuFilterIsActive;
     this.resetInlineMenuContainer();
 
     if (!this.ciphers?.length) {
       this.buildNoResultsInlineMenuList();
-      if (inlineMenuFilterIsActive) {
-        this.appendShowAllItemsButton();
-      }
       return;
     }
 
     if (this.useLitComponents) {
       this.loadLitPageOfCiphers();
       this.renderLitCipherList();
-      if (inlineMenuFilterIsActive) {
-        this.appendShowAllItemsButton();
-      }
       return;
     }
 
@@ -736,9 +732,7 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
         onListEdgeReached: this.showInlineMenuAccountCreation
           ? () => this.newItemButtonElement?.focus()
           : undefined,
-        newItem: this.showInlineMenuAccountCreation
-          ? this.buildNewItemActionProps(true)
-          : undefined,
+        newItem: this.getLitCipherListActionProps(),
       }),
     );
     this.setupLitCipherListScrollListeners();
@@ -848,6 +842,9 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
           theme: this.theme,
           dataTestId: "inline-menu-empty-state",
           ...this.buildNewItemActionProps(false),
+          secondaryAction: this.inlineMenuFilterIsActive
+            ? this.buildShowAllItemsActionProps()
+            : undefined,
         }),
       );
       this.newItemButtonElement =
@@ -864,6 +861,9 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
     const newItemButton = this.buildNewItemButton();
 
     this.inlineMenuListContainer.append(noItemsMessage, newItemButton);
+    if (this.inlineMenuFilterIsActive) {
+      this.appendShowAllItemsButton();
+    }
   }
 
   /**
@@ -922,6 +922,32 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
     }
 
     return this.getTranslation("addNewVaultItem");
+  }
+
+  /**
+   * Gets the action rendered below the Lit cipher list: "New login" when suggesting account
+   * creation, or "Show all items" when the list is filtered (the two never apply together).
+   */
+  private getLitCipherListActionProps(): InlineMenuCipherListNewItem | undefined {
+    if (this.showInlineMenuAccountCreation) {
+      return this.buildNewItemActionProps(true);
+    }
+
+    return this.inlineMenuFilterIsActive ? this.buildShowAllItemsActionProps() : undefined;
+  }
+
+  /**
+   * Builds the props for the Lit "Show all items" action, which share the New Item action's treatment.
+   */
+  private buildShowAllItemsActionProps(): InlineMenuCipherListNewItem {
+    const actionText = this.getTranslation("inlineMenuShowAllItems");
+
+    return {
+      actionText,
+      i18n: { actionAria: actionText },
+      handleAction: (event) => this.handleShowAllItemsAction(event as MouseEvent),
+      actionDataTestId: "inline-menu-show-all-items-button",
+    };
   }
 
   /**
