@@ -679,7 +679,8 @@ export class OverlayBackground implements OverlayBackgroundInterface {
 
   /**
    * Narrows the page-matched ciphers to those whose username starts with the value entered
-   * in the focused username/email field. Never adds ciphers to the list. Sets
+   * in the focused username/email field, or, when no username matches, whose name starts with
+   * it. Never adds ciphers to the list. Sets
    * `inlineMenuFilterIsActive` to indicate whether the returned list is filtered.
    *
    * @param inlineMenuCiphersArray - The page-matched inline menu ciphers
@@ -702,8 +703,15 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     }
 
     this.inlineMenuFilterIsActive = true;
-    return inlineMenuCiphersArray.filter(([, cipher]) =>
+    const usernameMatches = inlineMenuCiphersArray.filter(([, cipher]) =>
       cipher.login?.username?.trim().toLowerCase().startsWith(fieldValue),
+    );
+    if (usernameMatches.length) {
+      return usernameMatches;
+    }
+
+    return inlineMenuCiphersArray.filter(([, cipher]) =>
+      cipher.name?.trim().toLowerCase().startsWith(fieldValue),
     );
   }
 

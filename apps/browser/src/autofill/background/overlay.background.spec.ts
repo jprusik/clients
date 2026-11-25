@@ -1278,8 +1278,27 @@ describe("OverlayBackground", () => {
         expect(overlayBackground["inlineMenuFilterIsActive"]).toBe(true);
       });
 
-      it("does not match usernames that only contain the value", async () => {
-        overlayBackground["focusedFieldValue"] = "name-1";
+      it("falls back to the cipher name when no username matches", async () => {
+        overlayBackground["focusedFieldValue"] = "NAME-3";
+
+        expect(await getFilteredIds()).toStrictEqual(["inline-menu-cipher-1"]);
+        expect(overlayBackground["inlineMenuFilterIsActive"]).toBe(true);
+      });
+
+      it("does not consider cipher names when a username matches", async () => {
+        const originalName = loginCipher2.name;
+        loginCipher2.name = "username-1-other";
+        overlayBackground["focusedFieldValue"] = "username-1";
+
+        try {
+          expect(await getFilteredIds()).toStrictEqual(["inline-menu-cipher-0"]);
+        } finally {
+          loginCipher2.name = originalName;
+        }
+      });
+
+      it("does not match usernames or names that only contain the value", async () => {
+        overlayBackground["focusedFieldValue"] = "ame-1";
 
         expect(await getFilteredIds()).toStrictEqual([]);
         expect(overlayBackground["inlineMenuFilterIsActive"]).toBe(true);
