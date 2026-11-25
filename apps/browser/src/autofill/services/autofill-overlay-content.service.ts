@@ -858,10 +858,13 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
       true,
     );
 
-    return this.useEventHandlersMemo(
-      (event: Event) => debouncedFormFieldInput(EventSecurity.isEventTrusted(event)),
-      this.getFormFieldHandlerMemoIndex(formFieldElement, EVENTS.INPUT),
-    );
+    const formFieldInputHandler = (event: Event) => {
+      const isTrustedEvent = EventSecurity.isEventTrusted(event);
+      debouncedFormFieldInput(isTrustedEvent);
+    };
+    const memoIndex = this.getFormFieldHandlerMemoIndex(formFieldElement, EVENTS.INPUT);
+
+    return this.useEventHandlersMemo(formFieldInputHandler, memoIndex);
   };
 
   /**

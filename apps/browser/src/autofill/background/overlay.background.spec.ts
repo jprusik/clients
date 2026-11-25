@@ -1347,7 +1347,7 @@ describe("OverlayBackground", () => {
         expect(overlayBackground["inlineMenuFilterIsActive"]).toBe(false);
       });
 
-      it("resets the show all state only when a different field is focused, and never takes a value from focus data", () => {
+      it("keeps the typed value and show all state for the same field, and resets them for a different field", () => {
         const sender = mock<chrome.runtime.MessageSender>({ tab, frameId: 2 });
         const focusedFieldData = createFocusedFieldDataMock({ focusedFieldOpid: "field-1" });
         overlayBackground["setFocusedFieldData"](
@@ -1357,12 +1357,13 @@ describe("OverlayBackground", () => {
         overlayBackground["showAllInlineMenuItems"] = true;
         overlayBackground["focusedFieldValue"] = "user";
 
+        // Focused field data is re-sent for the same field on ArrowDown and repositioning.
         overlayBackground["setFocusedFieldData"](
           { command: "updateFocusedFieldData", focusedFieldData },
           sender,
         );
         expect(overlayBackground["showAllInlineMenuItems"]).toBe(true);
-        expect(overlayBackground["focusedFieldValue"]).toBe("");
+        expect(overlayBackground["focusedFieldValue"]).toBe("user");
 
         overlayBackground["setFocusedFieldData"](
           {
@@ -1372,6 +1373,23 @@ describe("OverlayBackground", () => {
           sender,
         );
         expect(overlayBackground["showAllInlineMenuItems"]).toBe(false);
+        expect(overlayBackground["focusedFieldValue"]).toBe("");
+      });
+
+      it("resets the typed value when the same field opid is focused in a different frame", () => {
+        const focusedFieldData = createFocusedFieldDataMock({ focusedFieldOpid: "field-1" });
+        overlayBackground["setFocusedFieldData"](
+          { command: "updateFocusedFieldData", focusedFieldData },
+          mock<chrome.runtime.MessageSender>({ tab, frameId: 2 }),
+        );
+        overlayBackground["focusedFieldValue"] = "user";
+
+        overlayBackground["setFocusedFieldData"](
+          { command: "updateFocusedFieldData", focusedFieldData },
+          mock<chrome.runtime.MessageSender>({ tab, frameId: 3 }),
+        );
+
+        expect(overlayBackground["focusedFieldValue"]).toBe("");
       });
 
       it("keeps showing all items only while the field value is unchanged", async () => {
@@ -1407,6 +1425,36 @@ describe("OverlayBackground", () => {
         );
 
         expect(overlayBackground["showAllInlineMenuItems"]).toBe(false);
+      });
+
+      it("stores the field value without refreshing the list while the list is closed", async () => {
+        const sender = mock<chrome.runtime.MessageSender>({ tab, frameId: 2 });
+        jest.spyOn(overlayBackground as any, "senderFrameHasFocusedField").mockReturnValue(true);
+        const updateListSpy = jest
+          .spyOn(overlayBackground as any, "updateInlineMenuListCiphers")
+          .mockResolvedValue(undefined);
+        overlayBackground["inlineMenuListPort"] = null;
+
+        await overlayBackground["updateFocusedFieldValue"](
+          { command: "updateFocusedFieldValue", focusedFieldValue: "joh" },
+          sender,
+        );
+
+        expect(overlayBackground["focusedFieldValue"]).toBe("joh");
+        expect(updateListSpy).not.toHaveBeenCalled();
+      });
+
+      it("ignores a field value sent from a frame that does not have the focused field", async () => {
+        const sender = mock<chrome.runtime.MessageSender>({ tab, frameId: 3 });
+        jest.spyOn(overlayBackground as any, "senderFrameHasFocusedField").mockReturnValue(false);
+        overlayBackground["focusedFieldValue"] = "";
+
+        await overlayBackground["updateFocusedFieldValue"](
+          { command: "updateFocusedFieldValue", focusedFieldValue: "joh" },
+          sender,
+        );
+
+        expect(overlayBackground["focusedFieldValue"]).toBe("");
       });
 
       it("ignores a non-string field value sent by the content script", async () => {

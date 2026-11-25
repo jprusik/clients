@@ -723,8 +723,9 @@ export class OverlayBackground implements OverlayBackgroundInterface {
   }
 
   /**
-   * Stores the value of the focused username/email field and refreshes the
-   * open inline menu list so it reflects the filtered ciphers.
+   * Stores the value of the focused username/email field and, when the inline menu list
+   * is open, refreshes it so it reflects the filtered ciphers. The value is stored even when
+   * the list is closed so a list opened later is filtered by the current value.
    *
    * @param focusedFieldValue - The current value of the focused field
    * @param sender - The sender of the extension message
@@ -733,7 +734,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     { focusedFieldValue }: OverlayBackgroundExtensionMessage,
     sender: chrome.runtime.MessageSender,
   ) {
-    if (!sender.tab || !this.inlineMenuListPort || !this.senderFrameHasFocusedField(sender)) {
+    if (!sender.tab || !this.senderFrameHasFocusedField(sender)) {
       return;
     }
 
@@ -743,7 +744,10 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       // "Show all items" only applies to the value that was filtered when it was chosen.
       this.showAllInlineMenuItems = false;
     }
-    await this.updateInlineMenuListCiphers(sender.tab);
+
+    if (this.inlineMenuListPort) {
+      await this.updateInlineMenuListCiphers(sender.tab);
+    }
   }
 
   /**
@@ -2216,10 +2220,11 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       previousFocusedFieldData?.frameId !== frameId ||
       previousFocusedFieldData?.focusedFieldOpid !== focusedFieldData.focusedFieldOpid
     ) {
+      // The typed value and "Show all items" belong to the field they were entered in. Focused
+      // field data is also re-sent for the same field (ArrowDown, repositioning), which keeps them.
       this.showAllInlineMenuItems = false;
+      this.focusedFieldValue = "";
     }
-    // Focusing a field never carries a value, so the filter only reflects what the user types.
-    this.focusedFieldValue = "";
     this.focusedFieldData = {
       ...focusedFieldData,
       tabId: sender.tab.id,
