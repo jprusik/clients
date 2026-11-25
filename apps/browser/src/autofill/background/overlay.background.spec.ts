@@ -1355,6 +1355,41 @@ describe("OverlayBackground", () => {
         expect(overlayBackground["showAllInlineMenuItems"]).toBe(false);
       });
 
+      it("keeps showing all items only while the field value is unchanged", async () => {
+        const sender = mock<chrome.runtime.MessageSender>({ tab, frameId: 2 });
+        jest.spyOn(overlayBackground as any, "senderFrameHasFocusedField").mockReturnValue(true);
+        overlayBackground["inlineMenuListPort"] = listPortSpy;
+        overlayBackground["focusedFieldValue"] = "user";
+        overlayBackground["showAllInlineMenuItems"] = true;
+
+        await overlayBackground["updateFocusedFieldValue"](
+          { command: "updateFocusedFieldValue", focusedFieldValue: "user" },
+          sender,
+        );
+        expect(overlayBackground["showAllInlineMenuItems"]).toBe(true);
+
+        await overlayBackground["updateFocusedFieldValue"](
+          { command: "updateFocusedFieldValue", focusedFieldValue: "user2" },
+          sender,
+        );
+        expect(overlayBackground["showAllInlineMenuItems"]).toBe(false);
+      });
+
+      it("returns to the filtered view when the field is cleared after show all items", async () => {
+        const sender = mock<chrome.runtime.MessageSender>({ tab, frameId: 2 });
+        jest.spyOn(overlayBackground as any, "senderFrameHasFocusedField").mockReturnValue(true);
+        overlayBackground["inlineMenuListPort"] = listPortSpy;
+        overlayBackground["focusedFieldValue"] = "user";
+        overlayBackground["showAllInlineMenuItems"] = true;
+
+        await overlayBackground["updateFocusedFieldValue"](
+          { command: "updateFocusedFieldValue", focusedFieldValue: "" },
+          sender,
+        );
+
+        expect(overlayBackground["showAllInlineMenuItems"]).toBe(false);
+      });
+
       it("ignores a non-string field value sent by the content script", async () => {
         const sender = mock<chrome.runtime.MessageSender>({ tab, frameId: 2 });
         jest.spyOn(overlayBackground as any, "senderFrameHasFocusedField").mockReturnValue(true);

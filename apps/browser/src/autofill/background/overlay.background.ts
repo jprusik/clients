@@ -729,7 +729,12 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       return;
     }
 
+    const previousFocusedFieldValue = this.focusedFieldValue;
     this.focusedFieldValue = this.toFieldValueString(focusedFieldValue);
+    if (this.focusedFieldValue !== previousFocusedFieldValue) {
+      // "Show all items" only applies to the value that was filtered when it was chosen.
+      this.showAllInlineMenuItems = false;
+    }
     await this.updateInlineMenuListCiphers(sender.tab);
   }
 
