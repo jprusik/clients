@@ -46,8 +46,6 @@ export type FocusedFieldData = {
   showPasskeys?: boolean;
   focusedFieldForm?: string;
   focusedFieldOpid?: string;
-  /** Only populated for username/email fields while inline menu filtering is enabled. */
-  focusedFieldValue?: string;
 };
 
 export type InlineMenuElementPosition = {

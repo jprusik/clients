@@ -851,8 +851,15 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
    * @param formFieldElement - The form field element that triggered the input event.
    */
   private handleFormFieldInputEvent = (formFieldElement: ElementWithOpId<FormFieldElement>) => {
+    const debouncedFormFieldInput = debounce(
+      (isTrustedEvent: unknown) =>
+        this.triggerFormFieldInput(formFieldElement, isTrustedEvent === true),
+      100,
+      true,
+    );
+
     return this.useEventHandlersMemo(
-      debounce(() => this.triggerFormFieldInput(formFieldElement), 100, true),
+      (event: Event) => debouncedFormFieldInput(EventSecurity.isEventTrusted(event)),
       this.getFormFieldHandlerMemoIndex(formFieldElement, EVENTS.INPUT),
     );
   };
@@ -863,8 +870,14 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
    * vault item. It also acts to remove the inline menu list while the user is typing.
    *
    * @param formFieldElement - The form field element that triggered the input event.
+   * @param isTrustedEvent - Whether the input event originated from the user agent. The field
+   * value is only shared with the background for trusted events, so page script cannot drive
+   * the inline menu filter by setting field values or dispatching synthetic events.
    */
-  private async triggerFormFieldInput(formFieldElement: ElementWithOpId<FormFieldElement>) {
+  private async triggerFormFieldInput(
+    formFieldElement: ElementWithOpId<FormFieldElement>,
+    isTrustedEvent: boolean,
+  ) {
     if (!elementIsFillableFormField(formFieldElement)) {
       return;
     }
@@ -877,7 +890,9 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
       return;
     }
 
-    const filterableFieldValue = this.getFilterableFieldValue(formFieldElement);
+    const filterableFieldValue = isTrustedEvent
+      ? this.getFilterableFieldValue(formFieldElement)
+      : undefined;
     if (filterableFieldValue !== undefined) {
       await this.sendExtensionMessage("updateFocusedFieldValue", {
         focusedFieldValue: filterableFieldValue,
@@ -1104,7 +1119,6 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
       accountCreationFieldType: autofillFieldData?.accountCreationFieldType,
       focusedFieldForm: autofillFieldData?.form ?? undefined,
       focusedFieldOpid: autofillFieldData?.opid,
-      focusedFieldValue: this.getFilterableFieldValue(formFieldElement),
     };
 
     const allFields = this.formFieldElements;
@@ -1471,7 +1485,7 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
       return;
     }
     this.handleHiddenElementFallbackEvent(formFieldElement);
-    await this.triggerFormFieldInput(formFieldElement);
+    await this.triggerFormFieldInput(formFieldElement, EventSecurity.isEventTrusted(event));
   };
 
   /**
@@ -1548,6 +1562,7 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
   /**
    * Gets the value of a username/email field that is filled by login ciphers. Returns
    * undefined unless inline menu filtering is enabled, so the value is not shared otherwise.
+   * Callers must only use this in response to a trusted user event.
    *
    * @param formFieldElement - The form field element to get the value of.
    */

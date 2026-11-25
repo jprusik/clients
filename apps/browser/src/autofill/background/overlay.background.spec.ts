@@ -1328,37 +1328,44 @@ describe("OverlayBackground", () => {
         expect(overlayBackground["inlineMenuFilterIsActive"]).toBe(false);
       });
 
-      it("resets the show all state only when a different field is focused", () => {
+      it("resets the show all state only when a different field is focused, and never takes a value from focus data", () => {
         const sender = mock<chrome.runtime.MessageSender>({ tab, frameId: 2 });
-        const focusedFieldData = createFocusedFieldDataMock({
-          focusedFieldOpid: "field-1",
-          focusedFieldValue: "user",
-        });
+        const focusedFieldData = createFocusedFieldDataMock({ focusedFieldOpid: "field-1" });
         overlayBackground["setFocusedFieldData"](
           { command: "updateFocusedFieldData", focusedFieldData },
           sender,
         );
         overlayBackground["showAllInlineMenuItems"] = true;
+        overlayBackground["focusedFieldValue"] = "user";
 
         overlayBackground["setFocusedFieldData"](
           { command: "updateFocusedFieldData", focusedFieldData },
           sender,
         );
         expect(overlayBackground["showAllInlineMenuItems"]).toBe(true);
-        expect(overlayBackground["focusedFieldValue"]).toBe("user");
+        expect(overlayBackground["focusedFieldValue"]).toBe("");
 
         overlayBackground["setFocusedFieldData"](
           {
             command: "updateFocusedFieldData",
-            focusedFieldData: {
-              ...focusedFieldData,
-              focusedFieldOpid: "field-2",
-              focusedFieldValue: undefined,
-            },
+            focusedFieldData: { ...focusedFieldData, focusedFieldOpid: "field-2" },
           },
           sender,
         );
         expect(overlayBackground["showAllInlineMenuItems"]).toBe(false);
+      });
+
+      it("ignores a non-string field value sent by the content script", async () => {
+        const sender = mock<chrome.runtime.MessageSender>({ tab, frameId: 2 });
+        jest.spyOn(overlayBackground as any, "senderFrameHasFocusedField").mockReturnValue(true);
+        overlayBackground["inlineMenuListPort"] = listPortSpy;
+        overlayBackground["focusedFieldValue"] = "user";
+
+        await overlayBackground["updateFocusedFieldValue"](
+          { command: "updateFocusedFieldValue", focusedFieldValue: { toString: () => "x" } as any },
+          sender,
+        );
+
         expect(overlayBackground["focusedFieldValue"]).toBe("");
       });
     });

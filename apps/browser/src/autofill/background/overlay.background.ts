@@ -2205,7 +2205,8 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     ) {
       this.showAllInlineMenuItems = false;
     }
-    this.focusedFieldValue = this.toFieldValueString(focusedFieldData.focusedFieldValue);
+    // Focusing a field never carries a value, so the filter only reflects what the user types.
+    this.focusedFieldValue = "";
     this.focusedFieldData = {
       ...focusedFieldData,
       tabId: sender.tab.id,

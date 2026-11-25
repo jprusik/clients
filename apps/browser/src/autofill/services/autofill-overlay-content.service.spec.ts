@@ -584,6 +584,46 @@ describe("AutofillOverlayContentService", () => {
           });
         });
 
+        it("does not send the field value for an untrusted input event when filtering is enabled", async () => {
+          autofillOverlayContentService["filterInlineMenuByFieldValue"] = true;
+          (autofillFieldElement as HTMLInputElement).value = "test";
+
+          await autofillOverlayContentService.setupOverlayListeners(
+            autofillFieldElement,
+            autofillFieldData,
+            pageDetailsMock,
+          );
+          jest.mocked(EventSecurity.isEventTrusted).mockReturnValue(false);
+          autofillFieldElement.dispatchEvent(new Event("input"));
+          await flushPromises();
+
+          expect(sendExtensionMessageSpy).not.toHaveBeenCalledWith(
+            "updateFocusedFieldValue",
+            expect.anything(),
+          );
+          expect(sendExtensionMessageSpy).toHaveBeenCalledWith("closeAutofillInlineMenu", {
+            overlayElement: AutofillOverlayElement.List,
+            forceCloseInlineMenu: true,
+          });
+        });
+
+        it("does not include the field value in the focused field data", async () => {
+          autofillOverlayContentService["filterInlineMenuByFieldValue"] = true;
+          (autofillFieldElement as HTMLInputElement).value = "test";
+
+          await autofillOverlayContentService.setupOverlayListeners(
+            autofillFieldElement,
+            autofillFieldData,
+            pageDetailsMock,
+          );
+          autofillFieldElement.dispatchEvent(new Event("focus"));
+          await flushPromises();
+
+          expect(autofillOverlayContentService["focusedFieldData"]).not.toHaveProperty(
+            "focusedFieldValue",
+          );
+        });
+
         it("does not send the field value when filtering is disabled", async () => {
           (autofillFieldElement as HTMLInputElement).value = "test";
 
