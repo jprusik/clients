@@ -1222,6 +1222,7 @@ describe("OverlayBackground", () => {
         command: "updateAutofillInlineMenuListCiphers",
         showInlineMenuAccountCreation: false,
         showPasskeysLabels: false,
+        inlineMenuFilterIsActive: false,
         focusedFieldHasValue: false,
         ciphers: [
           {
@@ -1244,6 +1245,121 @@ describe("OverlayBackground", () => {
             type: CipherType.Login,
           },
         ],
+      });
+    });
+
+    describe("filtering the inline menu ciphers by the focused field value", () => {
+      const getFilteredIds = async () =>
+        (await overlayBackground["getInlineMenuCipherData"]()).map(({ id }) => id);
+
+      beforeEach(() => {
+        autofillSettingsService.filterInlineMenuByFieldValue$ = of(true);
+        overlayBackground["focusedFieldData"] = createFocusedFieldDataMock({ tabId: tab.id });
+        overlayBackground["inlineMenuCiphers"] = new Map([
+          ["inline-menu-cipher-0", loginCipher1],
+          ["inline-menu-cipher-1", loginCipher2],
+        ]);
+      });
+
+      it("shows every cipher when the field value is empty or whitespace", async () => {
+        overlayBackground["focusedFieldValue"] = "   ";
+
+        expect(await getFilteredIds()).toStrictEqual([
+          "inline-menu-cipher-0",
+          "inline-menu-cipher-1",
+        ]);
+        expect(overlayBackground["inlineMenuFilterIsActive"]).toBe(false);
+      });
+
+      it("shows only ciphers whose username starts with the trimmed, case-insensitive value", async () => {
+        overlayBackground["focusedFieldValue"] = "  USERNAME-1 ";
+
+        expect(await getFilteredIds()).toStrictEqual(["inline-menu-cipher-0"]);
+        expect(overlayBackground["inlineMenuFilterIsActive"]).toBe(true);
+      });
+
+      it("does not match usernames that only contain the value", async () => {
+        overlayBackground["focusedFieldValue"] = "name-1";
+
+        expect(await getFilteredIds()).toStrictEqual([]);
+        expect(overlayBackground["inlineMenuFilterIsActive"]).toBe(true);
+        expect(overlayBackground["currentInlineMenuCiphersCount"]).toBe(2);
+      });
+
+      it("shows every cipher when the setting is disabled", async () => {
+        autofillSettingsService.filterInlineMenuByFieldValue$ = of(false);
+        overlayBackground["focusedFieldValue"] = "username-1";
+
+        expect(await getFilteredIds()).toStrictEqual([
+          "inline-menu-cipher-0",
+          "inline-menu-cipher-1",
+        ]);
+        expect(overlayBackground["inlineMenuFilterIsActive"]).toBe(false);
+      });
+
+      it("shows every cipher when the focused field is not filled by logins", async () => {
+        overlayBackground["focusedFieldData"] = createFocusedFieldDataMock({
+          tabId: tab.id,
+          inlineMenuFillType: CipherType.Card,
+        });
+        overlayBackground["focusedFieldValue"] = "username-1";
+
+        await getFilteredIds();
+
+        expect(overlayBackground["inlineMenuFilterIsActive"]).toBe(false);
+      });
+
+      it("shows every cipher after the user chooses to show all items", async () => {
+        overlayBackground["focusedFieldValue"] = "username-1";
+        overlayBackground["showAllInlineMenuItems"] = true;
+
+        expect(await getFilteredIds()).toStrictEqual([
+          "inline-menu-cipher-0",
+          "inline-menu-cipher-1",
+        ]);
+        expect(overlayBackground["inlineMenuFilterIsActive"]).toBe(false);
+      });
+
+      it("does not apply a filter when there are no page-matched ciphers", async () => {
+        overlayBackground["inlineMenuCiphers"] = new Map();
+        overlayBackground["focusedFieldValue"] = "username-1";
+
+        expect(await getFilteredIds()).toStrictEqual([]);
+        expect(overlayBackground["inlineMenuFilterIsActive"]).toBe(false);
+      });
+
+      it("resets the show all state only when a different field is focused", () => {
+        const sender = mock<chrome.runtime.MessageSender>({ tab, frameId: 2 });
+        const focusedFieldData = createFocusedFieldDataMock({
+          focusedFieldOpid: "field-1",
+          focusedFieldValue: "user",
+        });
+        overlayBackground["setFocusedFieldData"](
+          { command: "updateFocusedFieldData", focusedFieldData },
+          sender,
+        );
+        overlayBackground["showAllInlineMenuItems"] = true;
+
+        overlayBackground["setFocusedFieldData"](
+          { command: "updateFocusedFieldData", focusedFieldData },
+          sender,
+        );
+        expect(overlayBackground["showAllInlineMenuItems"]).toBe(true);
+        expect(overlayBackground["focusedFieldValue"]).toBe("user");
+
+        overlayBackground["setFocusedFieldData"](
+          {
+            command: "updateFocusedFieldData",
+            focusedFieldData: {
+              ...focusedFieldData,
+              focusedFieldOpid: "field-2",
+              focusedFieldValue: undefined,
+            },
+          },
+          sender,
+        );
+        expect(overlayBackground["showAllInlineMenuItems"]).toBe(false);
+        expect(overlayBackground["focusedFieldValue"]).toBe("");
       });
     });
 
@@ -1316,6 +1432,7 @@ describe("OverlayBackground", () => {
         command: "updateAutofillInlineMenuListCiphers",
         showInlineMenuAccountCreation: false,
         showPasskeysLabels: false,
+        inlineMenuFilterIsActive: false,
         focusedFieldHasValue: false,
         ciphers: [
           {
@@ -1354,6 +1471,7 @@ describe("OverlayBackground", () => {
           command: "updateAutofillInlineMenuListCiphers",
           showInlineMenuAccountCreation: true,
           showPasskeysLabels: false,
+          inlineMenuFilterIsActive: false,
           focusedFieldHasValue: false,
           ciphers: [
             {
@@ -1395,6 +1513,7 @@ describe("OverlayBackground", () => {
           command: "updateAutofillInlineMenuListCiphers",
           showInlineMenuAccountCreation: true,
           showPasskeysLabels: false,
+          inlineMenuFilterIsActive: false,
           focusedFieldHasValue: false,
           ciphers: [
             {
@@ -1467,6 +1586,7 @@ describe("OverlayBackground", () => {
           command: "updateAutofillInlineMenuListCiphers",
           showInlineMenuAccountCreation: true,
           showPasskeysLabels: false,
+          inlineMenuFilterIsActive: false,
           focusedFieldHasValue: false,
           ciphers: [
             {
@@ -1507,6 +1627,7 @@ describe("OverlayBackground", () => {
           command: "updateAutofillInlineMenuListCiphers",
           showInlineMenuAccountCreation: true,
           showPasskeysLabels: false,
+          inlineMenuFilterIsActive: false,
           focusedFieldHasValue: false,
           ciphers: [],
         });
@@ -1597,6 +1718,7 @@ describe("OverlayBackground", () => {
         ],
         showInlineMenuAccountCreation: false,
         showPasskeysLabels: true,
+        inlineMenuFilterIsActive: false,
         focusedFieldHasValue: false,
       });
     });
@@ -1664,6 +1786,7 @@ describe("OverlayBackground", () => {
         ],
         showInlineMenuAccountCreation: false,
         showPasskeysLabels: false,
+        inlineMenuFilterIsActive: false,
         focusedFieldHasValue: false,
       });
     });
@@ -1731,6 +1854,7 @@ describe("OverlayBackground", () => {
         ],
         showInlineMenuAccountCreation: false,
         showPasskeysLabels: false,
+        inlineMenuFilterIsActive: false,
         focusedFieldHasValue: false,
       });
     });
@@ -2423,6 +2547,7 @@ describe("OverlayBackground", () => {
           ciphers: [],
           showInlineMenuAccountCreation: true,
           showPasskeysLabels: false,
+          inlineMenuFilterIsActive: false,
           focusedFieldHasValue: false,
         });
       });

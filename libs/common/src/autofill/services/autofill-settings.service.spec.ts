@@ -104,4 +104,45 @@ describe("AutofillSettingsService", () => {
       subscription.unsubscribe();
     });
   });
+
+  describe("filterInlineMenuByFieldValue$", () => {
+    const originalEnvironment = process.env.ENV;
+    const originalDevFlags = process.env.DEV_FLAGS;
+
+    afterEach(() => {
+      process.env.ENV = originalEnvironment;
+      process.env.DEV_FLAGS = originalDevFlags;
+    });
+
+    it("emits false by default", async () => {
+      process.env.ENV = "development";
+      process.env.DEV_FLAGS = JSON.stringify({ enableInlineMenuFiltering: true });
+
+      await expect(
+        firstValueFrom(autofillSettingsService.filterInlineMenuByFieldValue$),
+      ).resolves.toBe(false);
+    });
+
+    it("emits the stored value when the dev flag is enabled", async () => {
+      process.env.ENV = "development";
+      process.env.DEV_FLAGS = JSON.stringify({ enableInlineMenuFiltering: true });
+
+      await autofillSettingsService.setFilterInlineMenuByFieldValue(true);
+
+      await expect(
+        firstValueFrom(autofillSettingsService.filterInlineMenuByFieldValue$),
+      ).resolves.toBe(true);
+    });
+
+    it("emits false when the dev flag is disabled, even if the stored value is true", async () => {
+      process.env.ENV = "development";
+      process.env.DEV_FLAGS = JSON.stringify({});
+
+      await autofillSettingsService.setFilterInlineMenuByFieldValue(true);
+
+      await expect(
+        firstValueFrom(autofillSettingsService.filterInlineMenuByFieldValue$),
+      ).resolves.toBe(false);
+    });
+  });
 });

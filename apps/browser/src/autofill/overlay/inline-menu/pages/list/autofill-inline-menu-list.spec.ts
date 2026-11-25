@@ -856,6 +856,66 @@ describe("AutofillInlineMenuList", () => {
       });
     });
 
+    describe("the show all items button for a filtered list", () => {
+      const getShowAllItemsButton = () =>
+        autofillInlineMenuList["inlineMenuListContainer"].querySelector("#show-all-items-button");
+
+      beforeEach(() => {
+        postWindowMessage(createInitAutofillInlineMenuListMessageMock());
+      });
+
+      it("does not render the button when the list is not filtered", async () => {
+        postWindowMessage({
+          command: "updateAutofillInlineMenuListCiphers",
+          ciphers: [createAutofillOverlayCipherDataMock(1)],
+          token: "test-token",
+        });
+        await flushPromises();
+
+        expect(getShowAllItemsButton()).toBeNull();
+      });
+
+      it("renders the button when the list is filtered, including when nothing matches", async () => {
+        postWindowMessage({
+          command: "updateAutofillInlineMenuListCiphers",
+          ciphers: [createAutofillOverlayCipherDataMock(1)],
+          inlineMenuFilterIsActive: true,
+          token: "test-token",
+        });
+        await flushPromises();
+        expect(getShowAllItemsButton()).not.toBeNull();
+
+        postWindowMessage({
+          command: "updateAutofillInlineMenuListCiphers",
+          ciphers: [],
+          inlineMenuFilterIsActive: true,
+          token: "test-token",
+        });
+        await flushPromises();
+        expect(getShowAllItemsButton()).not.toBeNull();
+        expect(
+          autofillInlineMenuList["inlineMenuListContainer"].querySelector("#new-item-button"),
+        ).not.toBeNull();
+      });
+
+      it("asks the background to show all items when clicked", async () => {
+        postWindowMessage({
+          command: "updateAutofillInlineMenuListCiphers",
+          ciphers: [createAutofillOverlayCipherDataMock(1)],
+          inlineMenuFilterIsActive: true,
+          token: "test-token",
+        });
+        await flushPromises();
+
+        getShowAllItemsButton().dispatchEvent(new Event("click"));
+
+        expect(globalThis.parent.postMessage).toHaveBeenCalledWith(
+          expect.objectContaining({ command: "showAllInlineMenuItems", token: "test-token" }),
+          expectedOrigin,
+        );
+      });
+    });
+
     describe("the list of ciphers for an authenticated user", () => {
       beforeEach(() => {
         postWindowMessage(createInitAutofillInlineMenuListMessageMock());

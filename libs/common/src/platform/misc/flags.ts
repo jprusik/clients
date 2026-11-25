@@ -15,6 +15,7 @@ export type SharedDevFlags = {
   fillAssistDevTools: boolean;
   useBitwardenAutofillAttributes: boolean;
   testPhishingUrls: string[];
+  enableInlineMenuFiltering: boolean;
   /** Nested settings object standing in for a device-management profile the host cannot supply. */
   managedSettingsDevSource?: Record<string, unknown>;
 };

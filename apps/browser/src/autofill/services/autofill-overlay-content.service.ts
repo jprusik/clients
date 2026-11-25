@@ -70,6 +70,7 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
   pageDetailsUpdateRequired = false;
   private showInlineMenuIdentities: boolean = false;
   private showInlineMenuCards: boolean = false;
+  private filterInlineMenuByFieldValue: boolean = false;
   private showInlineMenuSshKeys: boolean = false;
   private readonly findTabs = tabbable;
   private readonly sendExtensionMessage = sendExtensionMessage;
@@ -186,6 +187,7 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
     }
     this.isMonitoring = true;
     void this.getInlineMenuCardsVisibility();
+    void this.getFilterInlineMenuByFieldValue();
     void this.getInlineMenuIdentitiesVisibility();
     void this.getInlineMenuSshKeysVisibility();
 
@@ -875,10 +877,17 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
       return;
     }
 
-    await this.sendExtensionMessage("closeAutofillInlineMenu", {
-      overlayElement: AutofillOverlayElement.List,
-      forceCloseInlineMenu: true,
-    });
+    const filterableFieldValue = this.getFilterableFieldValue(formFieldElement);
+    if (filterableFieldValue !== undefined) {
+      await this.sendExtensionMessage("updateFocusedFieldValue", {
+        focusedFieldValue: filterableFieldValue,
+      });
+    } else {
+      await this.sendExtensionMessage("closeAutofillInlineMenu", {
+        overlayElement: AutofillOverlayElement.List,
+        forceCloseInlineMenu: true,
+      });
+    }
 
     if (!formFieldElement?.value) {
       await this.sendExtensionMessage("openAutofillInlineMenu");
@@ -1095,6 +1104,7 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
       accountCreationFieldType: autofillFieldData?.accountCreationFieldType,
       focusedFieldForm: autofillFieldData?.form ?? undefined,
       focusedFieldOpid: autofillFieldData?.opid,
+      focusedFieldValue: this.getFilterableFieldValue(formFieldElement),
     };
 
     const allFields = this.formFieldElements;
@@ -1523,6 +1533,38 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
       "getInlineMenuCardsVisibility",
     );
     this.showInlineMenuCards = inlineMenuCardsVisibility ?? true;
+  }
+
+  /**
+   * Queries the background script for the setting that filters the inline menu
+   * ciphers by the value entered in the focused field. Defaults to false.
+   * @private
+   */
+  private async getFilterInlineMenuByFieldValue() {
+    this.filterInlineMenuByFieldValue =
+      (await this.sendExtensionMessage("getFilterInlineMenuByFieldValue")) === true;
+  }
+
+  /**
+   * Gets the value of a username/email field that is filled by login ciphers. Returns
+   * undefined unless inline menu filtering is enabled, so the value is not shared otherwise.
+   *
+   * @param formFieldElement - The form field element to get the value of.
+   */
+  private getFilterableFieldValue(
+    formFieldElement: ElementWithOpId<FormFieldElement>,
+  ): string | undefined {
+    const autofillFieldData = this.formFieldElements.get(formFieldElement);
+    if (
+      !this.filterInlineMenuByFieldValue ||
+      !elementIsFillableFormField(formFieldElement) ||
+      autofillFieldData?.inlineMenuFillType !== CipherType.Login ||
+      !this.inlineMenuFieldQualificationService.isUsernameField(autofillFieldData)
+    ) {
+      return undefined;
+    }
+
+    return formFieldElement.value;
   }
 
   /**

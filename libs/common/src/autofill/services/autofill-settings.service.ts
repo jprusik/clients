@@ -8,6 +8,7 @@ import { AccountService } from "../../auth/abstractions/account.service";
 import { getOptionalUserId, getUserId } from "../../auth/services/account.service";
 import { FeatureFlag } from "../../enums/feature-flag.enum";
 import { ConfigService } from "../../platform/abstractions/config/config.service";
+import { devFlagEnabled } from "../../platform/misc/flags";
 import {
   AUTOFILL_SETTINGS_DISK,
   AUTOFILL_SETTINGS_DISK_LOCAL,
@@ -94,6 +95,15 @@ const SHOW_INLINE_MENU_SSH_KEYS = new UserKeyDefinition(
   },
 );
 
+const FILTER_INLINE_MENU_BY_FIELD_VALUE = new UserKeyDefinition(
+  AUTOFILL_SETTINGS_DISK,
+  "filterInlineMenuByFieldValue",
+  {
+    deserializer: (value: boolean) => value ?? false,
+    clearOn: [],
+  },
+);
+
 const HONOR_BITWARDEN_IGNORE_ATTRIBUTE = new KeyDefinition(
   AUTOFILL_SETTINGS_DISK_LOCAL,
   "honorBitwardenIgnoreAttribute",
@@ -161,6 +171,11 @@ export abstract class AutofillSettingsServiceAbstraction {
   setShowInlineMenuCards: (newValue: boolean) => Promise<void>;
   showInlineMenuSshKeys$: Observable<boolean>;
   setShowInlineMenuSshKeys: (newValue: boolean) => Promise<void>;
+  /**
+   * Emits `false` unless the `enableInlineMenuFiltering` dev flag is enabled.
+   */
+  filterInlineMenuByFieldValue$: Observable<boolean>;
+  setFilterInlineMenuByFieldValue: (newValue: boolean) => Promise<void>;
   honorBitwardenIgnoreAttribute$: Observable<boolean>;
   setHonorBitwardenIgnoreAttribute: (newValue: boolean) => Promise<void>;
   honorBitwardenAutofillAttribute$: Observable<boolean>;
@@ -212,6 +227,9 @@ export class AutofillSettingsService implements AutofillSettingsServiceAbstracti
 
   private showInlineMenuSshKeysState: ActiveUserState<boolean>;
   readonly showInlineMenuSshKeys$: Observable<boolean>;
+
+  private filterInlineMenuByFieldValueState: ActiveUserState<boolean>;
+  readonly filterInlineMenuByFieldValue$: Observable<boolean>;
 
   private honorBitwardenIgnoreAttributeState: GlobalState<boolean>;
   readonly honorBitwardenIgnoreAttribute$: Observable<boolean>;
@@ -306,6 +324,13 @@ export class AutofillSettingsService implements AutofillSettingsServiceAbstracti
           // If enabled, show SSH keys inline menu unless the SSH key type is restricted
           enabled && !restrictions.some((r) => r.cipherType === CipherType.SshKey),
       ),
+    );
+
+    this.filterInlineMenuByFieldValueState = this.stateProvider.getActive(
+      FILTER_INLINE_MENU_BY_FIELD_VALUE,
+    );
+    this.filterInlineMenuByFieldValue$ = this.filterInlineMenuByFieldValueState.state$.pipe(
+      map((enabled) => devFlagEnabled("enableInlineMenuFiltering") && (enabled ?? false)),
     );
 
     this.honorBitwardenIgnoreAttributeState = this.stateProvider.getGlobal(
@@ -403,6 +428,10 @@ export class AutofillSettingsService implements AutofillSettingsServiceAbstracti
 
   async setShowInlineMenuSshKeys(newValue: boolean): Promise<void> {
     await this.showInlineMenuSshKeysState.update(() => newValue);
+  }
+
+  async setFilterInlineMenuByFieldValue(newValue: boolean): Promise<void> {
+    await this.filterInlineMenuByFieldValueState.update(() => newValue);
   }
 
   async setHonorBitwardenIgnoreAttribute(newValue: boolean): Promise<void> {

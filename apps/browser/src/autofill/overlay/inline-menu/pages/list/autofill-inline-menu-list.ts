@@ -115,6 +115,7 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
       inlineMenuFillType = CipherType.Login,
       showInlineMenuAccountCreation = false,
       showPasskeysLabels = false,
+      inlineMenuFilterIsActive = false,
       generatedPassword,
       showSaveLoginMenu,
       showAnimations = true,
@@ -166,6 +167,7 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
     this.updateListItems({
       ciphers,
       showInlineMenuAccountCreation,
+      inlineMenuFilterIsActive,
     });
   }
 
@@ -656,6 +658,7 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
   private updateListItems({
     ciphers = [],
     showInlineMenuAccountCreation = false,
+    inlineMenuFilterIsActive = false,
   }: UpdateAutofillInlineMenuListCiphersParams) {
     if (this.isPasskeyAuthInProgress) {
       return;
@@ -668,12 +671,18 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
 
     if (!this.ciphers?.length) {
       this.buildNoResultsInlineMenuList();
+      if (inlineMenuFilterIsActive) {
+        this.appendShowAllItemsButton();
+      }
       return;
     }
 
     if (this.useLitComponents) {
       this.loadLitPageOfCiphers();
       this.renderLitCipherList();
+      if (inlineMenuFilterIsActive) {
+        this.appendShowAllItemsButton();
+      }
       return;
     }
 
@@ -686,6 +695,9 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
 
     this.inlineMenuListContainer.appendChild(this.ciphersList);
     this.toggleScrollClass();
+    if (inlineMenuFilterIsActive) {
+      this.appendShowAllItemsButton();
+    }
 
     if (!this.showInlineMenuAccountCreation) {
       return;
@@ -911,6 +923,36 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
 
     return this.getTranslation("addNewVaultItem");
   }
+
+  /**
+   * Appends a "Show all items" button below the list, which displays the unfiltered ciphers.
+   */
+  private appendShowAllItemsButton() {
+    const showAllItemsButton = globalThis.document.createElement("button");
+    showAllItemsButton.tabIndex = -1;
+    showAllItemsButton.id = "show-all-items-button";
+    showAllItemsButton.classList.add(
+      "add-new-item-button",
+      "inline-menu-list-button",
+      "inline-menu-list-action",
+    );
+    showAllItemsButton.textContent = this.getTranslation("inlineMenuShowAllItems");
+    showAllItemsButton.addEventListener(EVENTS.CLICK, this.handleShowAllItemsAction);
+
+    this.inlineMenuListContainer.appendChild(this.buildButtonContainer(showAllItemsButton));
+  }
+
+  /**
+   * Handles the click event for the "Show all items" button.
+   * Sends a message to the parent window to display the unfiltered ciphers.
+   */
+  private handleShowAllItemsAction = (event: MouseEvent) => {
+    if (!EventSecurity.isEventTrusted(event)) {
+      return;
+    }
+
+    this.postMessageToParent({ command: "showAllInlineMenuItems" });
+  };
 
   /**
    * Builds the shared props for the Lit New Item action, used by both the
